@@ -1,0 +1,204 @@
+# =============================================================================
+# IRVision configuration — the single source of truth for all parameters.
+#
+# * All paths are relative to the repository root.
+# * Load it in code with:  from irvision.utils.config import load_config
+# * Sections marked "(Phase N)" are not used yet; they are declared now so the
+#   shape of the config is stable and reviewers can see what is coming.
+# =============================================================================
+
+project:
+  seed: 42
+  device: auto            # auto | cuda | cpu  (auto = cuda if available)
+
+paths:
+  raw_dir: data/raw               # one sub-folder per downloaded Landsat scene
+  processed_dir: data/processed   # full-scene normalized arrays + manifest.csv
+  train_dir: data/train           # 256x256 patch .npz files
+  val_dir: data/val
+  test_dir: data/test
+  outputs_dir: outputs            # figures, reports, checkpoints (git-ignored)
+  models_dir: outputs/models      # fitted baselines, trained checkpoints
+  results_dir: outputs/results    # metric tables (json/csv) + comparison figures
+
+# -----------------------------------------------------------------------------
+# Dataset: Landsat 8/9 Collection-2 Level-2 (surface reflectance + surface temp)
+# -----------------------------------------------------------------------------
+dataset:
+  download:
+    stac_url: https://planetarycomputer.microsoft.com/api/stac/v1
+    token_url: https://planetarycomputer.microsoft.com/api/sas/v1/token/landsat-c2-l2
+    collection: landsat-c2-l2
+    platforms: [landsat-8, landsat-9]
+    max_cloud_cover: 5          # scene-level % cloud (STAC eo:cloud_cover)
+    crop_size: 2048             # pixels (30 m each -> ~61 km square); null = full scene
+    # Areas of interest: one scene is downloaded per entry. Chosen for diverse
+    # land cover (dense urban, farmland, desert, water).
+    aois:
+      - name: bengaluru
+        point: [77.59, 12.97]   # lon, lat
+        datetime: 2024-01-01/2024-03-31
+      - name: delhi
+        point: [77.21, 28.61]
+        datetime: 2023-10-01/2023-12-31
+      - name: nile_delta
+        point: [31.10, 30.60]
+        datetime: 2024-03-01/2024-05-31
+      # Added in Phase 5: 3 training cities were not enough to generalize (README D-017)
+      - name: ahmedabad         # semi-arid, urban
+        point: [72.57, 23.02]
+        datetime: 2024-01-01/2024-03-31
+      - name: kolkata           # humid delta, dense green vegetation
+        point: [88.36, 22.57]
+        datetime: 2023-12-01/2024-02-29
+      - name: jaipur            # dry, desert margin, hills
+        point: [75.79, 26.91]
+        datetime: 2023-11-01/2024-01-31
+      - name: chennai           # coastal urban, sea
+        point: [80.27, 13.08]
+        datetime: 2024-02-01/2024-04-30
+      - name: nagpur            # central India, forest + farmland
+        point: [79.09, 21.15]
+        datetime: 2024-01-01/2024-03-31
+      - name: mumbai            # coastal megacity, hills, sea
+        point: [72.88, 19.08]
+        datetime: 2023-12-01/2024-02-29
+      # holdout: the whole scene goes to the test split -> a truly unseen city
+      # for final evaluation and the app demo. Never train on it.
+      - name: hyderabad
+        point: [78.47, 17.39]
+        datetime: 2024-01-01/2024-03-31
+        holdout: true
+
+  # Asset key on Planetary Computer -> USGS file-name suffix used on disk.
+  # The loader finds files by suffix, so scenes downloaded manually from
+  # USGS EarthExplorer (e.g. LC09_..._SR_B4.TIF) work without changes.
+  bands:
+    red: SR_B4
+    green: SR_B3
+    blue: SR_B2
+    ir: ST_B10                  # Band 10 thermal (surface temperature product)
+    qa: QA_PIXEL
+
+  reference_band: red           # every band is resampled onto this band's grid
+  resampling: bilinear          # for continuous bands; QA always uses nearest
+  # QA_PIXEL conditions that make a pixel invalid (see preprocessing/masks.py)
+  mask_flags: [fill, dilated_cloud, cloud, cloud_shadow]
+
+# Co-registration check between IR and RGB (preprocessing/alignment.py)
+alignment:
+  max_shift_px: 1.0             # |shift| above this -> scene fails the check
+  min_response: 0.02            # phase-correlation peak below this -> "inconclusive"
+  positive_control_shift: [7, -4]   # (dx, dy) injected to prove the check works
+
+# -----------------------------------------------------------------------------
+# Preprocessing
+# -----------------------------------------------------------------------------
+preprocessing:
+  ir_normalization:
+    method: percentile          # percentile | range
+    low: 2                      # percentiles (method=percentile)
+    high: 98
+  # Absolute temperature on a fixed range (optional 2nd model input, see K-004).
+  # Stored in every patch as `ir_abs`; only used if listed in model.inputs.
+  ir_abs_normalization:
+    method: range
+    min: 250                    # Kelvin
+    max: 330
+  rgb_normalization:
+    method: range               # fixed range keeps colors comparable across scenes
+    min: 0.0                    # surface reflectance
+    max: 0.3
+  clahe:
+    clip_limit: 2.0
+    tile_grid_size: 8
+
+patches:
+  size: 256
+  stride: 128
+  max_invalid_fraction: 0.05    # drop patches with more cloud/fill than this
+  split:
+    strategy: spatial           # horizontal stripes per scene (no geographic overlap)
+    fractions: [0.70, 0.15, 0.15]   # train, val, test
+    test_scenes: []             # scene ids listed here go entirely to test
+
+# -----------------------------------------------------------------------------
+# Baselines + evaluation (Phase 4) — scripts/evaluate_baseline.py
+# -----------------------------------------------------------------------------
+baseline:
+  colormap: inferno             # pseudo-colour baseline (any matplotlib colormap)
+  lut_bins: 256                 # IR-brightness -> mean-RGB lookup table size
+
+evaluation:
+  split: test                   # which patch split metrics are reported on
+  input_key: ir_clahe           # model input stored in the patches (ir | ir_clahe)
+  timing_repeats: 50            # runs per timing measurement (after 3 warm-ups)
+  num_figure_samples: 5         # rows in the comparison figure
+
+# -----------------------------------------------------------------------------
+# Model + training (Phase 5) — scripts/train.py
+# -----------------------------------------------------------------------------
+model:
+  name: unet
+  inputs: [ir_clahe]            # patch keys stacked as input channels (in_channels = len)
+  out_channels: 3
+  base_channels: 32
+  depth: 4                      # 4 poolings -> image sides must be multiples of 16 (auto-padded)
+  color_space: rgb              # rgb only for now (lab: later experiment)
+
+training:
+  batch_size: 8
+  epochs: 40                    # 9 training cities: ~160 steps/epoch
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  num_workers: 0                # 0 is safest on Windows (data is cached in RAM anyway)
+  select_metric: val_psnr       # best checkpoint = highest val PSNR (or val_ssim)
+  early_stopping_patience: 15   # epochs without improvement before stopping
+  loss_weights:
+    l1: 1.0
+    ssim: 1.0                   # L1 + SSIM beat L1 alone on val (README D-018)
+    perceptual: 0.0             # VGG19 perceptual loss: not implemented yet
+
+# -----------------------------------------------------------------------------
+# Inference pipeline + app — irvision/inference, app/streamlit_app.py
+# -----------------------------------------------------------------------------
+inference:
+  checkpoint: outputs/models/unet_l1_ssim_9city/best.pt   # falls back to the LUT baseline if missing
+  tile_size: 512                # large images are processed in overlapping tiles
+  tile_overlap: 64
+  min_size: 32                  # smallest accepted image side (px)
+  max_size: 8192                # largest accepted image side (px)
+
+# -----------------------------------------------------------------------------
+# Semantic validation (Phase 7) — scripts/train_segmenter.py, evaluate_semantic.py
+# Land-cover segmenter trained on TRUE RGB -> ESA WorldCover labels; then run on
+# colorized vs true RGB to measure whether the meaning is preserved.
+# -----------------------------------------------------------------------------
+semantic:
+  checkpoint: outputs/models/segmenter/best.pt
+  epochs: 15
+  batch_size: 8
+  learning_rate: 0.0003
+
+# -----------------------------------------------------------------------------
+# Optional pipeline stages — each can be switched off independently and can
+# never break the core pipeline (PLAN §18)
+# -----------------------------------------------------------------------------
+optional:
+  # Pre-trained EDSR x2 (natural photos) on the CLAHE IR, before colorization (PLAN order).
+  # Outputs are then 2x the input size; metrics/segmentation use the output resized back.
+  super_resolution:
+    enabled: false                  # decided from measurements (README D-020)
+    model: eugenesiow/edsr-base
+    scale: 2
+  segmentation: {enabled: true}     # uses semantic.checkpoint; skipped with a warning if missing
+  # YOLOv8n-OBB trained on DOTA aerial imagery, run on the colorized RGB (README D-019).
+  # Off by default: on colorized output it produced only false "plane" detections.
+  detection:
+    enabled: false
+    model_path: outputs/pretrained/yolov8n-obb.pt
+    confidence: 0.25
+    tile_size: 256                  # each tile is resized to image_size (4x) so small objects are visible
+    image_size: 1024
+    brightness_gamma: 1.8           # our RGB is dark (reflectance 0-0.3); brighten like the display
+    match_iou: 0.5                  # colorized vs true RGB detections: same class and box IoU >= this

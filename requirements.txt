@@ -1,0 +1,39 @@
+# IRVision dependencies.
+#
+# STEP 1 — PyTorch is NOT listed here on purpose. On Windows, `pip install torch`
+# from PyPI gives a CPU-only build, which silently makes training ~50x slower.
+# Install the CUDA build yourself first (tested: torch 2.11.0 + CUDA 12.8):
+#
+#   pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
+#
+# (no NVIDIA GPU? use --index-url https://download.pytorch.org/whl/cpu)
+#
+# STEP 2 —  pip install -r requirements.txt
+# STEP 3 —  pip install -e .
+
+# Geospatial. GDAL is bundled inside the rasterio wheel — no separate GDAL
+# install is needed.
+rasterio>=1.3
+
+# Imaging / numerics
+numpy>=1.26
+opencv-python-headless>=4.8
+scikit-image>=0.22
+albumentations>=1.4
+pandas>=2.0
+
+# Utilities
+PyYAML>=6.0
+requests>=2.31
+tqdm>=4.66
+matplotlib>=3.8
+
+# App
+streamlit>=1.30
+
+# Advanced stages (pre-trained models: scripts/download_pretrained.py)
+ultralytics>=8.3          # YOLOv8-OBB object detection
+super-image>=0.2          # EDSR super-resolution
+
+# Development
+pytest>=8.0

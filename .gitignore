@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Data and generated outputs (large; regenerate with the scripts)
+data/**/*
+!data/**/
+!data/**/.gitkeep
+outputs/**/*
+!outputs/.gitkeep
+*.pt
+*.pth
+*.ckpt
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/

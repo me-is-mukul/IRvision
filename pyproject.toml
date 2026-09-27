@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "irvision"
+version = "0.1.0"
+description = "Enhancement and colorization of infrared satellite imagery"
+requires-python = ">=3.10"
+# Dependencies are listed in requirements.txt (single source of truth).
+
+[tool.setuptools.packages.find]
+include = ["irvision*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore:Use `@` matmul:PendingDeprecationWarning"]  # raised inside rasterio
