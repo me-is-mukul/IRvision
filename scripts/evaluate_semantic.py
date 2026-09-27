@@ -74,8 +74,10 @@ def main() -> None:
         with np.load(f) as d:
             ir, rgb, valid = d[ev["input_key"]][0].astype(np.float32), d["rgb"].astype(np.float32), d["valid"]
             worldcover = np.where(valid, d["landcover"][0], IGNORE).astype(np.uint8)   # stored (1, S, S)
+            ir_abs = d["ir_abs"][0].astype(np.float32)
         seg_true = seg.predict(rgb, valid)
-        preds = {m: col.colorize(ir) for m, col in methods.items()}
+        preds = {m: col.colorize(ir, ir_abs) if getattr(col, "needs_abs", False) else col.colorize(ir)
+                 for m, col in methods.items()}
         segs = {m: seg.predict(p, valid) for m, p in preds.items()}
         in_holdout = any(f.name.startswith(h) for h in held)
         for s in subsets:

@@ -75,14 +75,16 @@ def main() -> None:
     for f in files:
         with np.load(f) as d:
             ir, rgb, valid = d[ev["input_key"]][0].astype(np.float32), d["rgb"].astype(np.float32), d["valid"]
+            ir_abs = d["ir_abs"][0].astype(np.float32) if unet.needs_abs else None
         in_held = any(f.name.startswith(h) for h in held)
         seg_true = seg.predict(rgb, valid)
 
-        pred = unet.colorize(ir)
+        pred = unet.colorize(ir, ir_abs)
         t0 = time.perf_counter()
         ir_sr = sr.upscale(ir)
         t_sr.append((time.perf_counter() - t0) * 1000)
-        pred_sr = down(unet.colorize(ir_sr), ir.shape)
+        abs_sr = None if ir_abs is None else cv2.resize(ir_abs, ir_sr.shape[::-1], interpolation=cv2.INTER_CUBIC)
+        pred_sr = down(unet.colorize(ir_sr, abs_sr), ir.shape)
 
         dets_true, dets_unet, dets_lut = det.detect(rgb), det.detect(pred), det.detect(lut.colorize(ir))
         classes_true.update(d["class_name"] for d in dets_true)

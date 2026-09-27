@@ -23,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import json
 from datetime import datetime
 
@@ -127,7 +128,11 @@ def main() -> None:
     rows, titles = [], []
     for i in picks:
         name, ir, rgb, _ = samples[i]
-        rows.append([ir, lut.colorize(ir), unet.colorize(ir), rgb])
+        extra = ()
+        if unet.needs_abs:
+            with np.load(Path(eval_dir) / f"{name}.npz") as d:
+                extra = (d["ir_abs"][0].astype(np.float32),)
+        rows.append([ir, lut.colorize(ir), unet.colorize(ir, *extra), rgb])
         titles.append(name.split("_")[2] + " " + "_".join(name.split("_")[-2:]))
     save_comparison_grid(out / f"{args.out_name}_comparison.png", rows,
                          ["IR + CLAHE (input)", "LUT baseline", "U-Net", "Ground truth RGB"], titles)

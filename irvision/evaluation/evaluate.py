@@ -33,8 +33,13 @@ def scene_of(patch_name: str) -> str:
 def evaluate_colorizer(colorizer, split_dir: str | Path, input_key: str = "ir_clahe") -> pd.DataFrame:
     """Per-patch PSNR/SSIM (masked to valid pixels). One row per patch."""
     rows = []
+    needs_abs = getattr(colorizer, "needs_abs", False)
     for name, ir, rgb, valid in iter_patches(split_dir, input_key):
-        pred = colorizer.colorize(ir)
+        if needs_abs:
+            with np.load(Path(split_dir) / f"{name}.npz") as d:
+                pred = colorizer.colorize(ir, d["ir_abs"][0].astype(np.float32))
+        else:
+            pred = colorizer.colorize(ir)
         rows.append({
             "method": colorizer.name,
             "patch": name,
@@ -48,6 +53,8 @@ def evaluate_colorizer(colorizer, split_dir: str | Path, input_key: str = "ir_cl
 def time_colorizer(colorizer, size: int = 256, repeats: int = 50) -> dict[str, float]:
     """Inference time for one ``size`` x ``size`` image."""
     ir = np.random.default_rng(0).random((size, size), dtype=np.float32)
+    if getattr(colorizer, "needs_abs", False):
+        return time_function(lambda: colorizer.colorize(ir, ir), repeats=repeats)
     return time_function(lambda: colorizer.colorize(ir), repeats=repeats)
 
 

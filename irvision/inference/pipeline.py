@@ -162,7 +162,12 @@ class IRVisionPipeline:
                     warnings.append(f"Super-resolution failed and was skipped: {exc}")
 
         with _timer(times, "colorization"):
-            colorized = np.clip(self.colorizer.colorize(model_input), 0, 1).astype(np.float32)
+            if getattr(self.colorizer, "needs_abs", False):
+                ir_abs = self._absolute_channel(ir, valid, model_input.shape, warnings)
+                colorized = self.colorizer.colorize(model_input, ir_abs)
+            else:
+                colorized = self.colorizer.colorize(model_input)
+            colorized = np.clip(colorized, 0, 1).astype(np.float32)
             colorized[:, ~out_valid] = 0.0
         # metrics and segmentation work at the input resolution (the segmenter is trained at 30 m)
         native = colorized if scale == 1 else _resize_rgb(colorized, ir.shape)
@@ -269,6 +274,20 @@ class IRVisionPipeline:
         return model
 
     # -- stages ---------------------------------------------------------------
+    def _absolute_channel(self, ir, valid, shape, warnings) -> np.ndarray:
+        """Absolute-temperature input for 2-input models: Kelvin range-normalized as in training."""
+        kelvin_like = valid.any() and 150 <= float(np.median(ir[valid])) <= 400
+        if kelvin_like:
+            ir_abs, _ = normalize(ir, self.cfg["preprocessing"]["ir_abs_normalization"], valid)
+        else:
+            warnings.append("Input does not look like Kelvin; the absolute-temperature channel was "
+                            "approximated from relative values, so colours are less reliable.")
+            ir_abs, _ = normalize(ir, self.cfg["preprocessing"]["ir_normalization"], valid)
+        ir_abs = np.nan_to_num(ir_abs).astype(np.float32)
+        if ir_abs.shape != tuple(shape):   # after super-resolution
+            ir_abs = cv2.resize(ir_abs, shape[::-1], interpolation=cv2.INTER_CUBIC)
+        return ir_abs
+
     def _validate(self, image, nodata_mask, warnings) -> tuple[np.ndarray, np.ndarray]:
         inf = self.cfg["inference"]
         arr = np.asarray(image)
