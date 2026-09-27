@@ -20,7 +20,6 @@ from irvision.inference.pipeline import PipelineResult
 from irvision.semantic.landcover import CLASSES, PALETTE, colorize_labels
 from irvision.utils.visualization import draw_detections
 
-DISPLAY_GAMMA = 1.8
 MAX_DISPLAY_SIDE = 1024
 
 # pipeline stages in execution order, with display labels and a one-line description
@@ -85,8 +84,20 @@ def gray_u8(image: np.ndarray) -> np.ndarray:
     return (np.clip(np.nan_to_num(image), 0, 1) * 255).round().astype(np.uint8)
 
 
-def rgb_u8(rgb_chw: np.ndarray, gamma: float = DISPLAY_GAMMA) -> np.ndarray:
-    img = np.clip(np.nan_to_num(np.moveaxis(rgb_chw, 0, -1)), 0, 1) ** (1.0 / gamma)
+# Fixed "natural colour" display rendering, identical for predictions and ground truth.
+# Per-channel stretch from the 1st..99th percentiles of all true-colour training data
+# (reflectance/0.3 scale), then gamma and a mild saturation boost. Display only: every
+# metric is computed on the unmodified data.
+DISPLAY_LO = np.array([0.0, 0.03, 0.0], np.float32)
+DISPLAY_HI = np.array([0.65, 0.52, 0.36], np.float32)
+DISPLAY_SAT = 1.25
+
+
+def rgb_u8(rgb_chw: np.ndarray, gamma: float = 1.3) -> np.ndarray:
+    img = np.nan_to_num(np.moveaxis(rgb_chw, 0, -1)).astype(np.float32)
+    img = np.clip((img - DISPLAY_LO) / (DISPLAY_HI - DISPLAY_LO), 0, 1) ** (1.0 / gamma)
+    lum = img.mean(axis=-1, keepdims=True)
+    img = np.clip(lum + DISPLAY_SAT * (img - lum), 0, 1)
     return (img * 255).round().astype(np.uint8)
 
 

@@ -61,6 +61,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", default=None, help="default: config inference.checkpoint")
     parser.add_argument("--split", default=None)
     parser.add_argument("--out-name", default="model", help="output prefix: <out-name>_metrics.json etc.")
+    parser.add_argument("--tta", action="store_true", help="test-time augmentation (8 flips/rotations)")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -76,7 +77,7 @@ def main() -> None:
             raise SystemExit(f"Missing {f}. Run scripts/evaluate_baseline.py first.")
 
     unet = UNetColorizer.from_checkpoint(ckpt, device, tile_size=cfg["inference"]["tile_size"],
-                                         tile_overlap=cfg["inference"]["tile_overlap"])
+                                         tile_overlap=cfg["inference"]["tile_overlap"], tta=args.tta)
     lut = LUTColorizer.load(paths["models_dir"] / "baseline_lut.npy")
     mean_color = MeanColorColorizer(np.load(paths["models_dir"] / "baseline_mean_color.npy"))
     colorizers = [mean_color, lut, unet]

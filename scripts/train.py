@@ -30,6 +30,9 @@ def main() -> None:
     parser.add_argument("--ssim", type=float, help="override training.loss_weights.ssim")
     parser.add_argument("--perceptual", type=float, help="override training.loss_weights.perceptual (VGG19)")
     parser.add_argument("--inputs", nargs="+", help="override model.inputs, e.g. ir_clahe ir_abs")
+    parser.add_argument("--arch", choices=["unet", "resunet34"], help="override model.name")
+    parser.add_argument("--aux", type=float, help="weight of the land-cover head loss (resunet34); 0 = off")
+    parser.add_argument("--batch-size", type=int, help="override training.batch_size")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -46,6 +49,12 @@ def main() -> None:
         t["loss_weights"]["perceptual"] = args.perceptual
     if args.inputs:
         cfg["model"]["inputs"] = args.inputs
+    if args.arch:
+        cfg["model"]["name"] = args.arch
+    if args.aux is not None:
+        t["loss_weights"]["aux"] = args.aux
+    if args.batch_size:
+        t["batch_size"] = args.batch_size
 
     train(cfg, args.run_name, get_device(cfg))
 

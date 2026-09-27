@@ -66,3 +66,32 @@ def test_augment_keeps_pairs_aligned():
         ax, ay, av = aug(x, np.repeat(x, 3, 0), x.copy())
         np.testing.assert_array_equal(ax, ay[:1])      # same geometric transform
         np.testing.assert_array_equal(ax, av)
+
+
+# -- ResNet-34 U-Net with land-cover head -------------------------------------------------
+def test_resunet_shapes_and_aux_head():
+    from irvision.models.resunet import ResUNet34
+
+    model = ResUNet34(in_channels=1, out_channels=3, num_classes=5, pretrained=False).eval()
+    x = torch.rand(2, 1, 64, 96)
+    rgb = model(x)
+    assert rgb.shape == (2, 3, 64, 96) and 0 <= rgb.min() and rgb.max() <= 1
+    rgb2, logits = model.forward_with_aux(x)
+    assert logits.shape == (2, 5, 64, 96)
+    torch.testing.assert_close(rgb, rgb2)
+    with pytest.raises(ValueError, match="32"):
+        model(torch.rand(1, 1, 48, 48))
+
+
+def test_resunet_checkpoint_and_colorizer_padding(tmp_path):
+    from irvision.models.colorizer import UNetColorizer
+
+    cfg = {"name": "resunet34", "out_channels": 3, "base_channels": 32, "aux_classes": 5}
+    model = build_unet(cfg, in_channels=1, pretrained=False).eval()
+    torch.save({"state_dict": model.state_dict(), "model_cfg": cfg, "inputs": ["ir_clahe"], "val_metrics": {}},
+               tmp_path / "r.pt")
+    loaded, _ = load_checkpoint(tmp_path / "r.pt")
+    x = torch.rand(1, 1, 64, 64)
+    torch.testing.assert_close(loaded(x), model(x))
+    out = UNetColorizer(loaded).colorize(np.random.default_rng(0).random((70, 50)).astype(np.float32))
+    assert out.shape == (3, 70, 50)            # padded to multiples of 32 internally

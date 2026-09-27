@@ -47,3 +47,23 @@ def test_dataset_stacks_inputs_and_caches(tmp_path):
 def test_dataset_empty_folder(tmp_path):
     with pytest.raises(FileNotFoundError):
         PatchDataset(tmp_path)
+
+
+def test_dataset_land_cover_labels_follow_augmentation(tmp_path):
+    from irvision.training.augment import RandomFlipRotate
+
+    size = 16
+    ir = np.arange(size * size, dtype=np.float32).reshape(1, size, size) / (size * size)
+    valid = np.ones((size, size), bool)
+    valid[0, 0] = False
+    lc = (np.arange(size * size).reshape(size, size) % 5).astype(np.uint8)
+    save_patch(tmp_path / "s_r0_c0.npz", Patch(0, 0, "train", 0.0, ir, ir, np.repeat(ir, 3, 0), valid,
+                                                extra={"landcover": lc[None]}))
+    item = PatchDataset(tmp_path, labels=True)[0]
+    assert item["labels"].shape == (size, size) and item["labels"].dtype == torch.int64
+    assert item["labels"][0, 0] == 255                        # invalid pixel ignored
+    aug = PatchDataset(tmp_path, labels=True, transform=RandomFlipRotate(seed=3))[0]
+    # the label map moves exactly like the input image
+    lab_of = {float(v): int(l) for v, l in zip(item["input"][0].flatten(), item["labels"].flatten())}
+    for v, l in zip(aug["input"][0].flatten(), aug["labels"].flatten()):
+        assert lab_of[float(v)] == int(l)

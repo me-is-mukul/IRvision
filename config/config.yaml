@@ -63,6 +63,32 @@ dataset:
       - name: mumbai            # coastal megacity, hills, sea
         point: [72.88, 19.08]
         datetime: 2023-12-01/2024-02-29
+      # Added in the model-refinement round: more cities and a second season for two cities.
+      # None is within ~400 km of the held-out Hyderabad crop.
+      - name: pune              # Deccan plateau, urban + dry farmland
+        point: [73.86, 18.52]
+        datetime: 2024-01-01/2024-03-31
+      - name: lucknow           # Gangetic plain, dense farmland
+        point: [80.95, 26.85]
+        datetime: 2023-11-01/2024-01-31
+      - name: bhopal            # lakes, hills, urban
+        point: [77.41, 23.26]
+        datetime: 2024-01-01/2024-03-31
+      - name: kochi             # humid coast, backwaters, dense green
+        point: [76.27, 9.93]
+        datetime: 2024-01-01/2024-03-31
+      - name: guwahati          # Brahmaputra river, forested hills
+        point: [91.74, 26.14]
+        datetime: 2023-11-01/2024-01-31
+      - name: visakhapatnam     # coastal city, port, hills
+        point: [83.22, 17.69]
+        datetime: 2024-01-01/2024-03-31
+      - name: bengaluru_autumn  # same city, post-monsoon season (greener)
+        point: [77.59, 12.97]
+        datetime: 2023-10-01/2023-12-31
+      - name: delhi_spring      # same city, spring season
+        point: [77.21, 28.61]
+        datetime: 2024-02-15/2024-04-30
       # holdout: the whole scene goes to the test split -> a truly unseen city
       # for final evaluation and the app demo. Never train on it.
       - name: hyderabad
@@ -145,6 +171,7 @@ model:
   base_channels: 32
   depth: 4                      # 4 poolings -> image sides must be multiples of 16 (auto-padded)
   color_space: rgb              # rgb only for now (lab: later experiment)
+  aux_classes: 5                # land-cover head size (resunet34 only; used when loss_weights.aux > 0)
 
 training:
   batch_size: 8
@@ -158,6 +185,7 @@ training:
     l1: 1.0
     ssim: 1.0                   # L1 + SSIM beat L1 alone on val (README D-018)
     perceptual: 0.0             # VGG19 perceptual loss: not implemented yet
+    aux: 0.0                    # land-cover head cross-entropy (resunet34)
 
 # -----------------------------------------------------------------------------
 # Inference pipeline + app — irvision/inference, app/streamlit_app.py

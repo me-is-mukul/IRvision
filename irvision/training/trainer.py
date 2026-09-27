@@ -56,6 +56,17 @@ def batch_psnr(pred: torch.Tensor, target: torch.Tensor, valid: torch.Tensor) ->
 
 
 @torch.no_grad()
+def land_cover_weights(ds: PatchDataset, num_classes: int) -> torch.Tensor:
+    """Median-frequency class weights from the training labels (rare classes count more)."""
+    counts = np.zeros(num_classes)
+    for arrays in ds._cache:
+        lab = arrays[3]
+        counts += np.bincount(lab[lab != 255].ravel(), minlength=num_classes)[:num_classes]
+    freq = counts / max(counts.sum(), 1)
+    w = np.median(freq[freq > 0]) / np.maximum(freq, 1e-6)
+    return torch.tensor(np.clip(w, 0.1, 10.0), dtype=torch.float32)
+
+
 def validate(model, loader, loss_fn, device, autocast_dtype) -> dict[str, float]:
     model.eval()
     losses, psnrs, ssims = [], [], []
@@ -77,16 +88,21 @@ def train(cfg: dict, run_name: str, device: str) -> TrainResult:
     run_dir = paths["models_dir"] / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    train_ds = PatchDataset(paths["train_dir"], inputs, transform=RandomFlipRotate(cfg["project"]["seed"]), cache=True)
+    use_aux = mcfg.get("aux_classes", 0) > 0 and tcfg["loss_weights"].get("aux", 0) > 0
+    train_ds = PatchDataset(paths["train_dir"], inputs, transform=RandomFlipRotate(cfg["project"]["seed"]),
+                            cache=True, labels=use_aux)
     val_ds = PatchDataset(paths["val_dir"], inputs, cache=True)
     train_dl = DataLoader(train_ds, batch_size=tcfg["batch_size"], shuffle=True, drop_last=True,
                           num_workers=tcfg["num_workers"], pin_memory=device.startswith("cuda"))
     val_dl = DataLoader(val_ds, batch_size=tcfg["batch_size"], num_workers=tcfg["num_workers"])
     log.info("Run %s: %d train / %d val patches, inputs=%s, device=%s", run_name, len(train_ds), len(val_ds), inputs, device)
 
-    model = build_unet(mcfg, in_channels=len(inputs)).to(device)
+    model = build_unet(mcfg, in_channels=len(inputs), pretrained=mcfg.get("pretrained", True)).to(device)
     log.info("U-Net parameters: %.2f M", sum(p.numel() for p in model.parameters()) / 1e6)
-    loss_fn = ColorizationLoss(**tcfg["loss_weights"]).to(device)
+    class_weights = land_cover_weights(train_ds, mcfg["aux_classes"]) if use_aux else None
+    loss_fn = ColorizationLoss(**tcfg["loss_weights"], class_weights=class_weights).to(device)
+    if use_aux:
+        log.info("Auxiliary land-cover head on (weight %s)", tcfg["loss_weights"]["aux"])
     optimizer = torch.optim.AdamW(model.parameters(), lr=tcfg["learning_rate"], weight_decay=tcfg["weight_decay"])
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=tcfg["epochs"])
     # bfloat16 autocast on GPUs that support it: ~2x faster, no loss scaling needed
@@ -100,9 +116,14 @@ def train(cfg: dict, run_name: str, device: str) -> TrainResult:
         t0, train_losses = time.perf_counter(), []
         for batch in train_dl:
             x, y, v = (batch[k].to(device, non_blocking=True) for k in ("input", "target", "valid"))
+            logits = labels = None
             with torch.autocast(device_type=device.split(":")[0], dtype=autocast_dtype, enabled=autocast_dtype is not None):
-                pred = model(x)
-            loss, _ = loss_fn(pred.float(), y, v)
+                if use_aux:
+                    pred, logits = model.forward_with_aux(x)
+                    labels = batch["labels"].to(device, non_blocking=True)
+                else:
+                    pred = model(x)
+            loss, _ = loss_fn(pred.float(), y, v, logits, labels)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()

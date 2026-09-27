@@ -14,11 +14,12 @@ class RandomFlipRotate:
     def __init__(self, seed: int | None = None):
         self.rng = np.random.default_rng(seed)
 
-    def __call__(self, x: np.ndarray, y: np.ndarray, valid: np.ndarray):
+    def __call__(self, *arrays: np.ndarray):
+        """Apply the same random rotation/flip to every (C, H, W) array (input, target, masks, labels)."""
         k = int(self.rng.integers(4))
         flip = bool(self.rng.integers(2))
         out = []
-        for a in (x, y, valid):          # all are (C, H, W)
+        for a in arrays:
             a = np.rot90(a, k, axes=(-2, -1))
             out.append(a[..., ::-1] if flip else a)
         return tuple(out)

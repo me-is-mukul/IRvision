@@ -143,3 +143,16 @@ def test_read_geotiff_with_nan_nodata(tmp_path):
         dst.write(data, 1)
     arr, mask = read_image(path)
     assert mask[0].all() and not mask[1:].any()
+
+
+def test_colorizer_tta_shape_and_range():
+    """TTA averages 8 flipped/rotated passes; output keeps the input size and value range."""
+    torch.manual_seed(0)
+    model = UNet(base_channels=4, depth=2)
+    col = UNetColorizer(model, tile_size=64)
+    ir = np.random.default_rng(0).random((48, 40)).astype(np.float32)
+    plain = col.colorize(ir)
+    col.tta = True
+    tta = col.colorize(ir)
+    assert tta.shape == plain.shape == (3, 48, 40)
+    assert np.isfinite(tta).all() and 0 <= tta.min() and tta.max() <= 1

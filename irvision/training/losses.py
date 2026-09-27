@@ -69,17 +69,20 @@ class VGGPerceptualLoss(nn.Module):
 
 
 class ColorizationLoss(nn.Module):
-    """``w_l1 * L1 + w_ssim * (1 - SSIM) + w_perceptual * VGG19``, all masked by ``valid``.
+    """``w_l1 * L1 + w_ssim * (1 - SSIM) + w_perceptual * VGG19 + w_aux * CE(land cover)``.
 
+    Colour terms are masked by ``valid``; the land-cover term ignores label 255.
     Move to the training device with ``.to(device)`` (the VGG weights live inside).
     """
 
-    def __init__(self, l1: float = 1.0, ssim: float = 0.0, perceptual: float = 0.0, pretrained_vgg: bool = True):
+    def __init__(self, l1: float = 1.0, ssim: float = 0.0, perceptual: float = 0.0, aux: float = 0.0,
+                 pretrained_vgg: bool = True, class_weights: torch.Tensor | None = None):
         super().__init__()
-        self.w_l1, self.w_ssim, self.w_perceptual = l1, ssim, perceptual
+        self.w_l1, self.w_ssim, self.w_perceptual, self.w_aux = l1, ssim, perceptual, aux
         self.perceptual = VGGPerceptualLoss(pretrained_vgg) if perceptual else None
+        self.register_buffer("class_weights", class_weights if class_weights is not None else torch.empty(0))
 
-    def forward(self, pred, target, valid) -> tuple[torch.Tensor, dict[str, float]]:
+    def forward(self, pred, target, valid, logits=None, labels=None) -> tuple[torch.Tensor, dict[str, float]]:
         parts = {"l1": masked_l1(pred, target, valid)}
         total = self.w_l1 * parts["l1"]
         if self.w_ssim:
@@ -88,4 +91,8 @@ class ColorizationLoss(nn.Module):
         if self.perceptual is not None:
             parts["perceptual"] = self.perceptual(pred, target, valid)
             total = total + self.w_perceptual * parts["perceptual"]
+        if self.w_aux and logits is not None and labels is not None:
+            weight = self.class_weights if self.class_weights.numel() else None
+            parts["aux"] = F.cross_entropy(logits.float(), labels, weight=weight, ignore_index=255)
+            total = total + self.w_aux * parts["aux"]
         return total, {k: float(v.detach()) for k, v in parts.items()}

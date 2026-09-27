@@ -69,6 +69,9 @@ export function Results({ payload }: { payload: Payload }) {
           ) : (
             <CompareSlider before={colour} after={images.reference ?? ""} beforeLabel="IRVision colour" afterLabel="True colour" />
           )}
+          <p className="mt-3 px-1 text-[12px] leading-snug text-muted">
+            All colour images use the same fixed natural-colour display rendering; scores are computed on the unmodified data.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

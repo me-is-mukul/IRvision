@@ -57,7 +57,13 @@ class UNet(nn.Module):
         return torch.sigmoid(self.head(x))
 
 
-def build_unet(model_cfg: dict, in_channels: int) -> UNet:
+def build_unet(model_cfg: dict, in_channels: int, pretrained: bool = True) -> nn.Module:
+    """Build the colorizer named in ``model_cfg["name"]``: ``unet`` (default) or ``resunet34``."""
+    if model_cfg.get("name", "unet") == "resunet34":
+        from irvision.models.resunet import ResUNet34
+
+        return ResUNet34(in_channels=in_channels, out_channels=model_cfg["out_channels"],
+                         num_classes=model_cfg.get("aux_classes", 0), pretrained=pretrained)
     return UNet(
         in_channels=in_channels,
         out_channels=model_cfg["out_channels"],
@@ -66,10 +72,11 @@ def build_unet(model_cfg: dict, in_channels: int) -> UNet:
     )
 
 
-def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[UNet, dict]:
+def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[nn.Module, dict]:
     """Load a checkpoint written by the trainer. Returns ``(model in eval mode, metadata)``."""
     ckpt = torch.load(path, map_location=device, weights_only=False)
-    model = build_unet(ckpt["model_cfg"], in_channels=len(ckpt["inputs"]))
+    # weights come from the checkpoint, so skip downloading the ImageNet initialization
+    model = build_unet(ckpt["model_cfg"], in_channels=len(ckpt["inputs"]), pretrained=False)
     model.load_state_dict(ckpt["state_dict"])
     model.to(device).eval()
     meta = {k: v for k, v in ckpt.items() if k != "state_dict"}
