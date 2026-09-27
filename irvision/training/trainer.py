@@ -26,6 +26,7 @@ from torch.utils.data import DataLoader
 
 from irvision.models.unet import build_unet
 from irvision.training.augment import RandomFlipRotate
+from irvision.training.gan import PatchDiscriminator, d_loss, g_adv_loss
 from irvision.training.dataset import PatchDataset
 from irvision.training.losses import ColorizationLoss, masked_ssim
 from irvision.utils.log import get_logger
@@ -99,6 +100,16 @@ def train(cfg: dict, run_name: str, device: str) -> TrainResult:
 
     model = build_unet(mcfg, in_channels=len(inputs), pretrained=mcfg.get("pretrained", True)).to(device)
     log.info("U-Net parameters: %.2f M", sum(p.numel() for p in model.parameters()) / 1e6)
+    if tcfg.get("init_checkpoint"):
+        state = torch.load(tcfg["init_checkpoint"], map_location=device, weights_only=False)["state_dict"]
+        model.load_state_dict(state)
+        log.info("Initialized from %s", tcfg["init_checkpoint"])
+    gan_weight = float(tcfg.get("gan_weight", 0.0))
+    disc = opt_d = None
+    if gan_weight > 0:
+        disc = PatchDiscriminator(in_channels=len(inputs) + 3).to(device)
+        opt_d = torch.optim.Adam(disc.parameters(), lr=2e-4, betas=(0.5, 0.999))
+        log.info("Adversarial fine-tuning on (PatchGAN, weight %s)", gan_weight)
     class_weights = land_cover_weights(train_ds, mcfg["aux_classes"]) if use_aux else None
     loss_fn = ColorizationLoss(**tcfg["loss_weights"], class_weights=class_weights).to(device)
     if use_aux:
@@ -124,6 +135,13 @@ def train(cfg: dict, run_name: str, device: str) -> TrainResult:
                 else:
                     pred = model(x)
             loss, _ = loss_fn(pred.float(), y, v, logits, labels)
+            if disc is not None:
+                # invalid pixels are copied from the target so the discriminator can't use them
+                fake = pred.float() * v + y * (1 - v)
+                opt_d.zero_grad(set_to_none=True)
+                d_loss(disc(x, y), disc(x, fake.detach())).backward()
+                opt_d.step()
+                loss = loss + gan_weight * g_adv_loss(disc(x, fake))
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()

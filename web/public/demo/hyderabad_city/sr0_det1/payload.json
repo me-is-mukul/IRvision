@@ -21,14 +21,14 @@
    "label": "Validation",
    "description": "Single band, size limits, no-data mask",
    "status": "done",
-   "ms": 2.5
+   "ms": 1.6
   },
   {
    "key": "normalization",
    "label": "Normalization",
    "description": "Robust 2\u201398 % percentile stretch",
    "status": "done",
-   "ms": 6.9
+   "ms": 7.0
   },
   {
    "key": "enhancement",
@@ -49,80 +49,110 @@
    "label": "Colorization",
    "description": "U-Net: thermal \u2192 RGB",
    "status": "done",
-   "ms": 25.8
+   "ms": 114.7
   },
   {
    "key": "segmentation",
    "label": "Land-cover map",
    "description": "DeepLabV3 on the colorized image",
    "status": "done",
-   "ms": 30.3
+   "ms": 22.9
   },
   {
    "key": "detection",
    "label": "Object detection",
    "description": "YOLOv8-OBB, aerial classes (optional)",
    "status": "done",
-   "ms": 557.3
+   "ms": 474.1
   },
   {
    "key": "metrics",
    "label": "Quality metrics",
    "description": "PSNR and SSIM vs. true colour",
    "status": "done",
-   "ms": 237.5
+   "ms": 266.5
   },
   {
    "key": "semantic_validation",
    "label": "Semantic check",
    "description": "Land cover: colorized vs. true",
    "status": "done",
-   "ms": 45.1
+   "ms": 41.9
   },
   {
    "key": "detection_validation",
    "label": "Detection check",
    "description": "Objects: colorized vs. true",
    "status": "done",
-   "ms": 105.2
+   "ms": 120.5
   }
  ],
  "images": {
   "input": "/demo/hyderabad_city/sr0_det1/input.webp",
   "enhanced": "/demo/hyderabad_city/sr0_det1/enhanced.webp",
   "colorized": "/demo/hyderabad_city/sr0_det1/colorized.webp",
+  "detections": "/demo/hyderabad_city/sr0_det1/detections.webp",
   "reference": "/demo/hyderabad_city/sr0_det1/reference.webp",
   "semantic": "/demo/hyderabad_city/sr0_det1/semantic.png",
   "reference_semantic": "/demo/hyderabad_city/sr0_det1/reference_semantic.png"
  },
  "metrics": {
-  "total_ms": 1023.4,
-  "psnr": 18.42,
-  "ssim": 0.3545,
+  "total_ms": 1062.1,
+  "psnr": 20.9,
+  "ssim": 0.3694,
   "semantic": {
-   "agreement": 0.0745,
-   "miou": 0.1231,
-   "mean_dice": 0.1714,
+   "agreement": 0.0805,
+   "miou": 0.056,
+   "mean_dice": 0.099,
    "iou": {
-    "tree cover": 0.0763,
-    "low vegetation / crops": 0.0133,
-    "built-up": 0.0,
+    "tree cover": 0.1253,
+    "low vegetation / crops": 0.0089,
+    "built-up": 0.0001,
     "bare / sparse": 0.0,
-    "water": 0.5259
+    "water": 0.1455
    }
   },
   "detection": {
    "tp": 0,
-   "fp": 0,
+   "fp": 1,
    "fn": 0,
-   "n_pred": 0,
+   "n_pred": 1,
    "n_ref": 0,
-   "precision": null,
+   "precision": 0.0,
    "recall": null,
-   "f1": null
+   "f1": 0.0
   }
  },
- "detections": [],
+ "detections": [
+  {
+   "class_name": "plane",
+   "confidence": 0.3501,
+   "box": [
+    353.8,
+    323.9,
+    400.9,
+    370.3
+   ],
+   "polygon": [
+    [
+     381.3000030517578,
+     370.3000030517578
+    ],
+    [
+     400.8999938964844,
+     346.4000015258789
+    ],
+    [
+     373.3000030517578,
+     323.9000015258789
+    ],
+    [
+     353.8000030517578,
+     347.8000030517578
+    ]
+   ]
+  }
+ ],
  "reference_detections": [],
  "legend": [
   {

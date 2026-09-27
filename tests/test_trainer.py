@@ -54,3 +54,16 @@ def test_train_resunet_with_land_cover_head(tmp_path):
     cfg["training"].update(epochs=1, batch_size=2, loss_weights={"l1": 1.0, "ssim": 1.0, "perceptual": 0.0, "aux": 0.2})
     result = train(cfg, "tiny_res", device="cpu")
     assert (tmp_path / "models" / "tiny_res" / "best.pt").exists() and len(result.history) == 1
+
+
+def test_gan_finetune_from_checkpoint(tmp_path):
+    cfg = copy.deepcopy(load_config())
+    cfg["paths"].update(train_dir=tmp_path / "train", val_dir=tmp_path / "val", models_dir=tmp_path / "models")
+    _patches(cfg["paths"]["train_dir"], 4)
+    _patches(cfg["paths"]["val_dir"], 2)
+    cfg["model"].update(base_channels=4, depth=2)
+    cfg["training"].update(epochs=1, batch_size=2, loss_weights={"l1": 1.0, "ssim": 0.0, "perceptual": 0.0})
+    train(cfg, "base", device="cpu")
+    cfg["training"].update(init_checkpoint=str(tmp_path / "models" / "base" / "best.pt"), gan_weight=0.05)
+    result = train(cfg, "gan", device="cpu")
+    assert (tmp_path / "models" / "gan" / "last.pt").exists() and len(result.history) == 1

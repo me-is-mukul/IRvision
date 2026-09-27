@@ -64,28 +64,33 @@ export function Toggle({
   disabled?: boolean;
 }) {
   return (
-    <label className={`flex items-start justify-between gap-4 ${disabled ? "opacity-50" : "cursor-pointer"}`}>
-      <span>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`grid w-full grid-cols-[minmax(0,1fr)_51px] items-center gap-4 rounded-2xl border px-4 py-3 text-left transition ${
+        checked ? "border-neon/60 bg-neon-soft" : "border-line hover:border-line-strong"
+      } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+    >
+      <span className="min-w-0">
         <span className="block text-[15px] font-medium">{label}</span>
         {hint && <span className="mt-0.5 block text-[13px] leading-snug text-muted">{hint}</span>}
       </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 h-[30px] w-[51px] shrink-0 rounded-full transition-colors duration-200 ${
+      <span
+        aria-hidden
+        className={`relative h-[30px] w-[51px] rounded-full transition-colors duration-200 ${
           checked ? "bg-neon" : "bg-surface-2 ring-1 ring-line-strong"
         }`}
       >
         <span
-          className={`absolute top-[2px] size-[26px] rounded-full bg-white shadow-md transition-transform duration-200 ${
+          className={`absolute top-[2px] left-0 size-[26px] rounded-full bg-white shadow-md transition-transform duration-200 ${
             checked ? "translate-x-[23px]" : "translate-x-[2px]"
           }`}
         />
-      </button>
-    </label>
+      </span>
+    </button>
   );
 }
 

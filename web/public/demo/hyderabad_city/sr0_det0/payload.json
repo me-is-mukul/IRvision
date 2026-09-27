@@ -21,21 +21,21 @@
    "label": "Validation",
    "description": "Single band, size limits, no-data mask",
    "status": "done",
-   "ms": 3.1
+   "ms": 2.6
   },
   {
    "key": "normalization",
    "label": "Normalization",
    "description": "Robust 2\u201398 % percentile stretch",
    "status": "done",
-   "ms": 9.0
+   "ms": 7.6
   },
   {
    "key": "enhancement",
    "label": "Enhancement",
    "description": "CLAHE local contrast (16-bit)",
    "status": "done",
-   "ms": 21.9
+   "ms": 15.0
   },
   {
    "key": "super_resolution",
@@ -49,14 +49,14 @@
    "label": "Colorization",
    "description": "U-Net: thermal \u2192 RGB",
    "status": "done",
-   "ms": 393.6
+   "ms": 397.9
   },
   {
    "key": "segmentation",
    "label": "Land-cover map",
    "description": "DeepLabV3 on the colorized image",
    "status": "done",
-   "ms": 187.7
+   "ms": 122.4
   },
   {
    "key": "detection",
@@ -70,14 +70,14 @@
    "label": "Quality metrics",
    "description": "PSNR and SSIM vs. true colour",
    "status": "done",
-   "ms": 224.8
+   "ms": 212.3
   },
   {
    "key": "semantic_validation",
    "label": "Semantic check",
    "description": "Land cover: colorized vs. true",
    "status": "done",
-   "ms": 35.2
+   "ms": 35.8
   },
   {
    "key": "detection_validation",
@@ -96,19 +96,19 @@
   "reference_semantic": "/demo/hyderabad_city/sr0_det0/reference_semantic.png"
  },
  "metrics": {
-  "total_ms": 875.4,
-  "psnr": 18.42,
-  "ssim": 0.3545,
+  "total_ms": 793.7,
+  "psnr": 20.9,
+  "ssim": 0.3694,
   "semantic": {
-   "agreement": 0.0745,
-   "miou": 0.1231,
-   "mean_dice": 0.1714,
+   "agreement": 0.0805,
+   "miou": 0.056,
+   "mean_dice": 0.099,
    "iou": {
-    "tree cover": 0.0763,
-    "low vegetation / crops": 0.0133,
-    "built-up": 0.0,
+    "tree cover": 0.1253,
+    "low vegetation / crops": 0.0089,
+    "built-up": 0.0001,
     "bare / sparse": 0.0,
-    "water": 0.5259
+    "water": 0.1455
    }
   }
  },

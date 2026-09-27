@@ -21,21 +21,21 @@
    "label": "Validation",
    "description": "Single band, size limits, no-data mask",
    "status": "done",
-   "ms": 2.6
+   "ms": 2.8
   },
   {
    "key": "normalization",
    "label": "Normalization",
    "description": "Robust 2\u201398 % percentile stretch",
    "status": "done",
-   "ms": 6.7
+   "ms": 8.9
   },
   {
    "key": "enhancement",
    "label": "Enhancement",
    "description": "CLAHE local contrast (16-bit)",
    "status": "done",
-   "ms": 29.3
+   "ms": 37.3
   },
   {
    "key": "super_resolution",
@@ -49,14 +49,14 @@
    "label": "Colorization",
    "description": "U-Net: thermal \u2192 RGB",
    "status": "done",
-   "ms": 34.1
+   "ms": 171.4
   },
   {
    "key": "segmentation",
    "label": "Land-cover map",
    "description": "DeepLabV3 on the colorized image",
    "status": "done",
-   "ms": 31.9
+   "ms": 38.9
   },
   {
    "key": "detection",
@@ -70,14 +70,14 @@
    "label": "Quality metrics",
    "description": "PSNR and SSIM vs. true colour",
    "status": "done",
-   "ms": 194.3
+   "ms": 260.1
   },
   {
    "key": "semantic_validation",
    "label": "Semantic check",
    "description": "Land cover: colorized vs. true",
    "status": "done",
-   "ms": 36.7
+   "ms": 54.3
   },
   {
    "key": "detection_validation",
@@ -96,19 +96,19 @@
   "reference_semantic": "/demo/hyderabad_farmland/sr0_det0/reference_semantic.png"
  },
  "metrics": {
-  "total_ms": 335.6,
-  "psnr": 22.6,
-  "ssim": 0.5526,
+  "total_ms": 573.6,
+  "psnr": 20.29,
+  "ssim": 0.5171,
   "semantic": {
-   "agreement": 0.3324,
-   "miou": 0.1056,
-   "mean_dice": 0.1781,
+   "agreement": 0.5524,
+   "miou": 0.1789,
+   "mean_dice": 0.2634,
    "iou": {
-    "tree cover": 0.2181,
-    "low vegetation / crops": 0.1926,
+    "tree cover": 0.2807,
+    "low vegetation / crops": 0.4892,
     "built-up": 0.0,
     "bare / sparse": 0.0,
-    "water": 0.117
+    "water": 0.1247
    }
   }
  },

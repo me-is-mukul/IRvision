@@ -191,9 +191,9 @@ training:
 # Inference pipeline + app — irvision/inference, app/streamlit_app.py
 # -----------------------------------------------------------------------------
 inference:
-  checkpoint: outputs/models/unet_l1_ssim_9city/best.pt   # falls back to the LUT baseline if missing
-  tile_size: 512                # large images are processed in overlapping tiles
-  tile_overlap: 64
+  checkpoint: outputs/models/r2_gan_mid/last.pt   # ResNet-34 U-Net + land-cover head + GAN fine-tune; falls back to the LUT baseline if missing
+  tile_size: 256                # tiles = training patch size (the ResNet model is tile-size sensitive)
+  tile_overlap: 32
   min_size: 32                  # smallest accepted image side (px)
   max_size: 8192                # largest accepted image side (px)
 

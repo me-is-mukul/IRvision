@@ -21,21 +21,21 @@
    "label": "Validation",
    "description": "Single band, size limits, no-data mask",
    "status": "done",
-   "ms": 2.3
+   "ms": 3.3
   },
   {
    "key": "normalization",
    "label": "Normalization",
    "description": "Robust 2\u201398 % percentile stretch",
    "status": "done",
-   "ms": 6.0
+   "ms": 6.8
   },
   {
    "key": "enhancement",
    "label": "Enhancement",
    "description": "CLAHE local contrast (16-bit)",
    "status": "done",
-   "ms": 22.2
+   "ms": 29.7
   },
   {
    "key": "super_resolution",
@@ -49,42 +49,42 @@
    "label": "Colorization",
    "description": "U-Net: thermal \u2192 RGB",
    "status": "done",
-   "ms": 38.3
+   "ms": 138.6
   },
   {
    "key": "segmentation",
    "label": "Land-cover map",
    "description": "DeepLabV3 on the colorized image",
    "status": "done",
-   "ms": 31.4
+   "ms": 32.2
   },
   {
    "key": "detection",
    "label": "Object detection",
    "description": "YOLOv8-OBB, aerial classes (optional)",
    "status": "done",
-   "ms": 105.7
+   "ms": 107.4
   },
   {
    "key": "metrics",
    "label": "Quality metrics",
    "description": "PSNR and SSIM vs. true colour",
    "status": "done",
-   "ms": 182.2
+   "ms": 190.7
   },
   {
    "key": "semantic_validation",
    "label": "Semantic check",
    "description": "Land cover: colorized vs. true",
    "status": "done",
-   "ms": 34.1
+   "ms": 32.0
   },
   {
    "key": "detection_validation",
    "label": "Detection check",
    "description": "Objects: colorized vs. true",
    "status": "done",
-   "ms": 97.6
+   "ms": 100.6
   }
  ],
  "images": {
@@ -96,19 +96,19 @@
   "reference_semantic": "/demo/hyderabad_lakes/sr0_det1/reference_semantic.png"
  },
  "metrics": {
-  "total_ms": 519.8,
-  "psnr": 19.76,
-  "ssim": 0.5001,
+  "total_ms": 641.4,
+  "psnr": 19.73,
+  "ssim": 0.4816,
   "semantic": {
-   "agreement": 0.4187,
-   "miou": 0.2648,
-   "mean_dice": 0.3506,
+   "agreement": 0.4675,
+   "miou": 0.2608,
+   "mean_dice": 0.3546,
    "iou": {
-    "tree cover": 0.2158,
-    "low vegetation / crops": 0.3911,
-    "built-up": 0.0,
-    "bare / sparse": 0.0002,
-    "water": 0.7168
+    "tree cover": 0.2306,
+    "low vegetation / crops": 0.4675,
+    "built-up": 0.0001,
+    "bare / sparse": 0.0052,
+    "water": 0.6007
    }
   },
   "detection": {

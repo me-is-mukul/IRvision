@@ -33,6 +33,8 @@ def main() -> None:
     parser.add_argument("--arch", choices=["unet", "resunet34"], help="override model.name")
     parser.add_argument("--aux", type=float, help="weight of the land-cover head loss (resunet34); 0 = off")
     parser.add_argument("--batch-size", type=int, help="override training.batch_size")
+    parser.add_argument("--init", help="start from this checkpoint's weights (fine-tuning)")
+    parser.add_argument("--gan", type=float, help="PatchGAN adversarial loss weight (Pix2Pix-style fine-tuning)")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
@@ -55,6 +57,10 @@ def main() -> None:
         t["loss_weights"]["aux"] = args.aux
     if args.batch_size:
         t["batch_size"] = args.batch_size
+    if args.init:
+        t["init_checkpoint"] = args.init
+    if args.gan is not None:
+        t["gan_weight"] = args.gan
 
     train(cfg, args.run_name, get_device(cfg))
 

@@ -1,38 +1,38 @@
 {
  "colorization": {
-  "patches": 355,
+  "patches": 466,
   "rows": [
    {
     "method": "Average colour",
     "all": [
-     19.55,
-     0.3873
+     19.35,
+     0.3917
     ],
     "holdout": [
-     19.04,
-     0.3489
+     19.3,
+     0.35
     ]
    },
    {
     "method": "Lookup table",
     "all": [
-     21.65,
-     0.4789
+     21.26,
+     0.457
     ],
     "holdout": [
-     21.33,
-     0.4343
+     21.17,
+     0.4088
     ]
    },
    {
     "method": "IRVision U-Net",
     "all": [
-     22.12,
-     0.5468
+     22.84,
+     0.5569
     ],
     "holdout": [
-     21.28,
-     0.495
+     21.43,
+     0.4855
     ]
    }
   ],
@@ -43,66 +43,66 @@
      2048,
      2048
     ],
-    "psnr": 20.98,
-    "ssim": 0.5098,
+    "psnr": 21.28,
+    "ssim": 0.4999,
     "time_ms": {
-     "validation": 28.5,
-     "normalization": 109.7,
-     "enhancement": 139.0,
-     "colorization": 1078.5,
-     "segmentation": 1016.6,
-     "metrics": 3929.6,
-     "semantic_validation": 1215.4,
-     "total": 7517.3
+     "validation": 26.3,
+     "normalization": 97.2,
+     "enhancement": 124.1,
+     "colorization": 1057.9,
+     "segmentation": 666.1,
+     "metrics": 3642.4,
+     "semantic_validation": 827.6,
+     "total": 6441.6
     },
     "warnings": []
    }
   ]
  },
  "semantic": {
-  "ceiling": 0.456,
+  "ceiling": 0.462,
   "rows": [
    {
     "method": "IRVision U-Net",
-    "miou": 0.269,
-    "agreement": 0.428
+    "miou": 0.243,
+    "agreement": 0.488
    },
    {
     "method": "Lookup table",
-    "miou": 0.034,
-    "agreement": 0.092
+    "miou": 0.038,
+    "agreement": 0.112
    },
    {
     "method": "Average colour",
-    "miou": 0.058,
-    "agreement": 0.153
+    "miou": 0.029,
+    "agreement": 0.101
    }
   ],
   "per_class": {
-   "tree cover": 0.2623,
-   "low vegetation / crops": 0.3444,
-   "built-up": 0.0007,
-   "bare / sparse": 0.003,
-   "water": 0.7353
+   "tree cover": 0.377,
+   "low vegetation / crops": 0.3729,
+   "built-up": 0.0033,
+   "bare / sparse": 0.0084,
+   "water": 0.4541
   }
  },
  "advanced": {
   "super_resolution": [
    {
     "method": "U-Net",
-    "psnr": 22.12,
-    "ssim": 0.5468,
-    "semantic_miou": 0.2692,
-    "semantic_agreement": 0.4277,
-    "patches": 355
+    "psnr": 22.837,
+    "ssim": 0.5569,
+    "semantic_miou": 0.2431,
+    "semantic_agreement": 0.4876,
+    "patches": 466
    },
    {
     "method": "EDSR \u00d72 + U-Net",
-    "psnr": 19.792,
-    "ssim": 0.4987,
-    "semantic_miou": 0.1485,
-    "semantic_agreement": 0.3502,
-    "patches": 355
+    "psnr": 19.093,
+    "ssim": 0.4843,
+    "semantic_miou": 0.2107,
+    "semantic_agreement": 0.3591,
+    "patches": 466
    }
   ],
   "detection": {
@@ -110,11 +110,12 @@
     "harbor": 5,
     "ship": 2,
     "storage tank": 3,
-    "bridge": 2,
+    "bridge": 4,
     "plane": 2
    },
    "unet_rgb": {
-    "plane": 21
+    "plane": 12,
+    "ship": 13
    },
    "matched": 0
   }

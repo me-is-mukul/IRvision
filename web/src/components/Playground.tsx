@@ -125,7 +125,7 @@ export function Playground() {
             )}
           </div>
 
-          <div className="space-y-4 border-t border-line pt-4">
+          <div className="space-y-2.5 border-t border-line pt-4">
             <Toggle
               label="Super-resolution ×2"
               hint="EDSR upscaling before colorization. Lowers accuracy on this data."

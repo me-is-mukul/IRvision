@@ -115,3 +115,13 @@ def test_pipeline_with_super_resolution_and_detection():
 
     plain = pipe.process_image(ir, super_resolution=False, detection=False)
     assert plain.scale == 1 and plain.detections is None and plain.colorized.shape == (3, 64, 64)
+
+
+def test_patch_discriminator_and_losses():
+    from irvision.training.gan import PatchDiscriminator, d_loss, g_adv_loss
+
+    disc = PatchDiscriminator(in_channels=4)
+    scores = disc(torch.rand(2, 1, 64, 64), torch.rand(2, 3, 64, 64))
+    assert scores.ndim == 4 and scores.shape[:2] == (2, 1)
+    ones, zeros = torch.ones(2, 1, 4, 4), torch.zeros(2, 1, 4, 4)
+    assert d_loss(ones, zeros).item() == 0.0 and g_adv_loss(ones).item() == 0.0

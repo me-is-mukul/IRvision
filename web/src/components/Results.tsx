@@ -26,23 +26,21 @@ export function Results({ payload }: { payload: Payload }) {
   return (
     <div className="mt-4 space-y-4">
       {/* scores */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((c, i) => (
-          <motion.div
-            key={c.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.07 }}
-            className="card p-5"
-          >
-            <p className="text-[13px] font-medium text-muted">{c.label}</p>
-            <p className="mt-1.5 text-3xl font-semibold tracking-tight">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`card grid ${cards.length === 1 ? "grid-cols-1" : "grid-cols-2"} divide-line overflow-hidden ${cards.length > 3 ? "lg:grid-cols-4" : "lg:grid-cols-3"} lg:divide-x`}
+      >
+        {cards.map((c) => (
+          <div key={c.label} className="border-line p-5 [&:nth-child(-n+2)]:border-b lg:[&:nth-child(-n+2)]:border-b-0">
+            <p className="text-[12px] font-medium uppercase tracking-wider text-muted">{c.label}</p>
+            <p className="mt-1 text-[28px] font-semibold leading-tight tracking-tight tabular-nums">
               <CountUp value={c.value} decimals={c.decimals} suffix={c.suffix} />
             </p>
-            <p className="mt-2 text-[12.5px] leading-snug text-muted">{c.hint}</p>
-          </motion.div>
+            <p className="mt-1 text-[12px] leading-snug text-muted">{c.hint}</p>
+          </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* compare + gallery */}
       <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
@@ -74,21 +72,24 @@ export function Results({ payload }: { payload: Payload }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            ["Thermal input", images.input],
-            ["Enhanced (CLAHE)", images.enhanced],
-            [images.detections ? "Colorized + detections" : "Colorized", colour],
-            ["True colour", images.reference],
-          ]
-            .filter(([, src]) => src)
-            .map(([label, src]) => (
-              <figure key={label} className="card overflow-hidden p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt={label} className="aspect-square w-full rounded-[12px] object-cover" />
-                <figcaption className="px-2 pb-1 pt-2.5 text-[13px] text-subtle">{label}</figcaption>
-              </figure>
-            ))}
+        <div className="card p-3 sm:p-4">
+          <p className="mb-4 px-1 text-[15px] font-semibold tracking-tight">Outputs</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              ["Thermal input", images.input],
+              ["Enhanced (CLAHE)", images.enhanced],
+              [images.detections ? "Colour + detections" : "IRVision colour", colour],
+              ["True colour", images.reference],
+            ]
+              .filter(([, src]) => src)
+              .map(([label, src]) => (
+                <figure key={label} className="min-w-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={label} className="aspect-square w-full rounded-xl border border-line object-cover" />
+                  <figcaption className="truncate pt-2 text-center text-[12.5px] text-subtle">{label}</figcaption>
+                </figure>
+              ))}
+          </div>
         </div>
       </div>
 
@@ -107,32 +108,32 @@ export function Results({ payload }: { payload: Payload }) {
               </p>
             )}
           </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr_200px]">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {[
               ["Land cover in IRVision colour", images.semantic],
               ["Land cover in the real image", images.reference_semantic],
             ]
               .filter(([, src]) => src)
               .map(([label, src]) => (
-                <figure key={label}>
+                <figure key={label} className="min-w-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt={label} className="aspect-square w-full rounded-[12px] border border-line object-cover [image-rendering:pixelated]" />
-                  <figcaption className="pt-2.5 text-[13px] text-subtle">{label}</figcaption>
+                  <img src={src} alt={label} className="aspect-square w-full rounded-xl border border-line object-cover [image-rendering:pixelated]" />
+                  <figcaption className="pt-2 text-center text-[12.5px] text-subtle">{label}</figcaption>
                 </figure>
               ))}
-            <ul className="space-y-2.5 self-center text-[14px]">
-              {payload.legend.map((c) => (
-                <li key={c.name} className="flex items-center gap-2.5">
-                  <span className="size-3.5 rounded-[5px] ring-1 ring-white/15" style={{ background: c.color }} />
-                  <span className="capitalize text-subtle">{c.name}</span>
-                  {metrics.semantic?.iou[c.name] != null && (
-                    <span className="ml-auto font-mono text-[12px] text-muted">{(metrics.semantic.iou[c.name] as number).toFixed(2)}</span>
-                  )}
-                </li>
-              ))}
-              <li className="pt-1 text-[12px] leading-snug text-muted">Numbers: per-class IoU, colorized vs. real.</li>
-            </ul>
           </div>
+          <ul className="mt-5 flex flex-wrap gap-2 text-[13px]">
+            {payload.legend.map((c) => (
+              <li key={c.name} className="flex items-center gap-2 rounded-full border border-line bg-surface-2 py-1 pl-2 pr-3">
+                <span className="size-3 rounded-full ring-1 ring-white/15" style={{ background: c.color }} />
+                <span className="capitalize text-subtle">{c.name}</span>
+                {metrics.semantic?.iou[c.name] != null && (
+                  <span className="font-mono text-[12px] text-text">{(metrics.semantic.iou[c.name] as number).toFixed(2)}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[12px] text-muted">Number next to each class: IoU between the two maps.</p>
         </div>
       )}
 

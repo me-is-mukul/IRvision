@@ -1,36 +1,36 @@
 {
   "scene_id": "LC09_L2SP_144048_20240302_02_T1",
-  "checkpoint": "C:\\Users\\meism\\Desktop\\sem5\\innovate_hackathon\\outputs\\models\\unet_l1_ssim_9city\\best.pt",
+  "checkpoint": "C:\\Users\\meism\\Desktop\\sem5\\innovate_hackathon\\outputs\\models\\r2_gan_mid\\last.pt",
   "crop_size": 512,
   "demos": [
     {
       "name": "hyderabad_lakes",
       "crop": "rows 896-1408, cols 256-768",
-      "psnr": 19.755647582668768,
-      "ssim": 0.5000834005678108,
-      "agreement": 0.4187469482421875,
-      "miou": 0.2647898554388938,
-      "time_ms": 1363.749900003313,
+      "psnr": 19.73039706762616,
+      "ssim": 0.48162255107778507,
+      "agreement": 0.4674568176269531,
+      "miou": 0.2608030620012435,
+      "time_ms": 607.5535000018135,
       "warnings": []
     },
     {
       "name": "hyderabad_farmland",
       "crop": "rows 1408-1920, cols 0-512",
-      "psnr": 22.60077892305641,
-      "ssim": 0.5526111821252515,
-      "agreement": 0.33242034912109375,
-      "miou": 0.10555434014732916,
-      "time_ms": 376.0217999952147,
+      "psnr": 20.291319147662485,
+      "ssim": 0.5171382930980198,
+      "agreement": 0.5523910522460938,
+      "miou": 0.1789207865332341,
+      "time_ms": 375.1580999978614,
       "warnings": []
     },
     {
       "name": "hyderabad_city",
       "crop": "rows 768-1280, cols 896-1408",
-      "psnr": 18.41981907340831,
-      "ssim": 0.3545317709574771,
-      "agreement": 0.07446670532226562,
-      "miou": 0.12308691089170147,
-      "time_ms": 360.1318999972136,
+      "psnr": 20.8996615081193,
+      "ssim": 0.36935139728257177,
+      "agreement": 0.08047103881835938,
+      "miou": 0.05598428658568855,
+      "time_ms": 352.6144999996177,
       "warnings": []
     }
   ]

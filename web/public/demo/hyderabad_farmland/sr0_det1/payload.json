@@ -21,21 +21,21 @@
    "label": "Validation",
    "description": "Single band, size limits, no-data mask",
    "status": "done",
-   "ms": 1.9
+   "ms": 3.1
   },
   {
    "key": "normalization",
    "label": "Normalization",
    "description": "Robust 2\u201398 % percentile stretch",
    "status": "done",
-   "ms": 6.0
+   "ms": 8.0
   },
   {
    "key": "enhancement",
    "label": "Enhancement",
    "description": "CLAHE local contrast (16-bit)",
    "status": "done",
-   "ms": 26.9
+   "ms": 32.8
   },
   {
    "key": "super_resolution",
@@ -49,80 +49,110 @@
    "label": "Colorization",
    "description": "U-Net: thermal \u2192 RGB",
    "status": "done",
-   "ms": 38.7
+   "ms": 157.1
   },
   {
    "key": "segmentation",
    "label": "Land-cover map",
    "description": "DeepLabV3 on the colorized image",
    "status": "done",
-   "ms": 30.2
+   "ms": 45.1
   },
   {
    "key": "detection",
    "label": "Object detection",
    "description": "YOLOv8-OBB, aerial classes (optional)",
    "status": "done",
-   "ms": 95.8
+   "ms": 123.2
   },
   {
    "key": "metrics",
    "label": "Quality metrics",
    "description": "PSNR and SSIM vs. true colour",
    "status": "done",
-   "ms": 208.8
+   "ms": 272.7
   },
   {
    "key": "semantic_validation",
    "label": "Semantic check",
    "description": "Land cover: colorized vs. true",
    "status": "done",
-   "ms": 37.2
+   "ms": 43.1
   },
   {
    "key": "detection_validation",
    "label": "Detection check",
    "description": "Objects: colorized vs. true",
    "status": "done",
-   "ms": 89.4
+   "ms": 107.5
   }
  ],
  "images": {
   "input": "/demo/hyderabad_farmland/sr0_det1/input.webp",
   "enhanced": "/demo/hyderabad_farmland/sr0_det1/enhanced.webp",
   "colorized": "/demo/hyderabad_farmland/sr0_det1/colorized.webp",
+  "detections": "/demo/hyderabad_farmland/sr0_det1/detections.webp",
   "reference": "/demo/hyderabad_farmland/sr0_det1/reference.webp",
   "semantic": "/demo/hyderabad_farmland/sr0_det1/semantic.png",
   "reference_semantic": "/demo/hyderabad_farmland/sr0_det1/reference_semantic.png"
  },
  "metrics": {
-  "total_ms": 534.9,
-  "psnr": 22.6,
-  "ssim": 0.5526,
+  "total_ms": 792.6,
+  "psnr": 20.29,
+  "ssim": 0.5171,
   "semantic": {
-   "agreement": 0.3324,
-   "miou": 0.1056,
-   "mean_dice": 0.1781,
+   "agreement": 0.5524,
+   "miou": 0.1789,
+   "mean_dice": 0.2634,
    "iou": {
-    "tree cover": 0.2181,
-    "low vegetation / crops": 0.1926,
+    "tree cover": 0.2807,
+    "low vegetation / crops": 0.4892,
     "built-up": 0.0,
     "bare / sparse": 0.0,
-    "water": 0.117
+    "water": 0.1247
    }
   },
   "detection": {
    "tp": 0,
-   "fp": 0,
+   "fp": 1,
    "fn": 0,
-   "n_pred": 0,
+   "n_pred": 1,
    "n_ref": 0,
-   "precision": null,
+   "precision": 0.0,
    "recall": null,
-   "f1": null
+   "f1": 0.0
   }
  },
- "detections": [],
+ "detections": [
+  {
+   "class_name": "plane",
+   "confidence": 0.3192,
+   "box": [
+    176.9,
+    453.5,
+    257.7,
+    517.6
+   ],
+   "polygon": [
+    [
+     252.60000610351562,
+     517.6000061035156
+    ],
+    [
+     257.70001220703125,
+     460.1999969482422
+    ],
+    [
+     182.0,
+     453.5
+    ],
+    [
+     176.89999389648438,
+     510.8000030517578
+    ]
+   ]
+  }
+ ],
  "reference_detections": [],
  "legend": [
   {

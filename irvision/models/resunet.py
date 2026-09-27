@@ -61,7 +61,12 @@ class ResUNet34(nn.Module):
     def _features(self, x: torch.Tensor) -> torch.Tensor:
         if x.shape[-2] % 32 or x.shape[-1] % 32:
             raise ValueError(f"H and W must be divisible by 32, got {tuple(x.shape[-2:])}")
-        x = x[:, :1].repeat(1, 3, 1, 1) if self.in_channels == 1 else x[:, :3]
+        if self.in_channels == 1:
+            x = x[:, :1].repeat(1, 3, 1, 1)
+        elif self.in_channels == 2:   # (CLAHE, absolute temperature) -> (CLAHE, CLAHE, abs): keeps a 1-input init usable
+            x = torch.cat([x[:, :1], x[:, :1], x[:, 1:2]], dim=1)
+        else:
+            x = x[:, :3]
         x = (x - self.mean) / self.std
         s1 = self.stem(x)
         s2 = self.layer1(self.pool(s1))
