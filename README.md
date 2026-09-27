@@ -493,18 +493,35 @@ docker build -t irvision-api .
 docker run -p 7860:7860 irvision-api        # check: http://localhost:7860/api/health
 ```
 
-It runs on any container host. For **Hugging Face Spaces** (free CPU tier), the trained models
-are git-ignored in this repository, so assemble a ready-to-push Space folder first:
+**Free option A: serve it from your own laptop (recommended for demos).** The model server runs on
+your machine (using its GPU) and a free Cloudflare quick tunnel makes it reachable from the internet:
+
+```powershell
+winget install --id Cloudflare.cloudflared           # once
+.\scripts\go_live.ps1 -Site https://your-site.vercel.app
+```
+
+The script prints a link like `https://your-site.vercel.app/?api=https://abc-xyz.trycloudflare.com`.
+Opening it switches the website to live mode; the browser remembers the server, and
+`?api=off` switches back to demo mode. No redeploy is needed, even though the tunnel address
+changes on every start. The server is live while the script window stays open.
+
+**Option B: Hugging Face Space (Gradio SDK), if available on your account.** The trained models are git-ignored
+in this repository, so assemble a ready-to-push Space folder first:
 
 ```bash
 git clone https://huggingface.co/spaces/<your-user>/irvision-api deploy/hf-space
-python scripts/build_space.py            # copies code, config, demo images and models (86 MB)
+python scripts/build_space.py            # code, config, demo images, models (86 MB), app.py
 cd deploy/hf-space
 git lfs install
 git add . && git commit -m "Deploy IRVision model server" && git push
 ```
 
-Render, Railway, Fly.io or Google Cloud Run can build the same `Dockerfile`. The server listens
+When creating the Space, choose the **Gradio** SDK and **CPU basic (free)** hardware. The generated
+`app.py` starts the same FastAPI server; the Space URL is `https://<your-user>-irvision-api.hf.space`.
+
+**Docker hosts.** `python scripts/build_space.py --sdk docker` assembles the Docker variant, and the
+repository's `Dockerfile` also runs on Render, Railway, Fly.io or Google Cloud Run. The server listens
 on the `PORT` variable (default 7860).
 
 | Variable | Default | Purpose |
