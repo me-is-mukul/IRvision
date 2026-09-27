@@ -78,7 +78,8 @@ irvision/
     └── visualization.py  check figures (scene overview, patch grid, comparison grid)
 
 scripts/                  thin CLIs: parse args → call irvision → write outputs
-app/streamlit_app.py      dashboard (no processing logic)
+app/streamlit_app.py      Streamlit dashboard (internal tool, no processing logic)
+web/                      Next.js website; irvision/api/ serves it
 config/config.yaml        all parameters
 tests/                    pytest, synthetic data only
 demo/                     ready-to-upload demo images (scripts/export_demo.py)
@@ -188,7 +189,32 @@ needs no config.
 
 ---
 
-## 6. Where to change what
+## 6. Web app and model server
+
+```text
+web/ (Next.js 16, static)                         irvision/api/ (FastAPI)
+  src/lib/api.ts         ── fetch ──►  server.py    /api/examples, /api/process, /api/report
+  src/lib/useSimulation.ts                 │
+    animates the 10 stages; replays        ▼
+    measured per-stage times               IRVisionPipeline.process_image()   (same code as scripts)
+  src/components/                          │
+    PipelineFlow, Playground, Results,     ▼
+    CompareSlider, Report, ...            payload.py  build_payload(): display images + stages + metrics
+  public/demo/  ◄── scripts/export_web_demo.py (same build_payload, written to files)
+```
+
+- **One response format.** `payload.build_payload()` produces the JSON for both the live API
+  (images as `data:` URLs) and the static demo export (images as files). The frontend cannot
+  tell the difference, so demo mode and live mode render identically.
+- **Stage animation.** `useSimulation` advances through the early stages while the request is
+  in flight, holds on colorization until the response arrives, then replays the remaining
+  stages with their measured durations from `payload.stages`.
+- **Modes.** `NEXT_PUBLIC_API_URL` set and reachable → live; otherwise demo. Every fetch falls
+  back to demo data if the server fails.
+- **Deployment.** The website is static (Vercel). The model server is the `Dockerfile` at the
+  repository root (CPU PyTorch; weights baked into the image).
+
+## 7. Where to change what
 
 | I want to… | Change | Then run |
 |---|---|---|
@@ -201,11 +227,13 @@ needs no config.
 | deploy another checkpoint | `config.inference.checkpoint` | restart the app |
 | change land-cover classes | `irvision/semantic/landcover.py` | download_landcover → prepare_dataset → train_segmenter |
 | add an optional pipeline stage | a hook in `IRVisionPipeline.process_image` + a switch in `config.optional` | add tests in `tests/test_pipeline.py` |
-| change the UI | `app/streamlit_app.py` (UI only; call the pipeline) | `pytest tests/test_app.py` |
+| change the website | `web/src/components/` | `cd web && npm run build` |
+| change the API response | `irvision/api/payload.py` (+ `web/src/lib/api.ts` types) | `pytest tests/test_api.py`, `python scripts/export_web_demo.py` |
+| change the Streamlit dashboard | `app/streamlit_app.py` (UI only; call the pipeline) | `pytest tests/test_app.py` |
 
 ---
 
-## 7. Generated files (not versioned)
+## 8. Generated files (not versioned)
 
 | Path | Written by | Contents |
 |---|---|---|

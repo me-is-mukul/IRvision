@@ -1,0 +1,13 @@
+# Model server (irvision/api/server.py) runtime dependencies, used by the Dockerfile.
+# PyTorch is installed separately (CPU build) in the Dockerfile.
+numpy>=1.26
+opencv-python-headless>=4.8
+rasterio>=1.3
+scikit-image>=0.22
+matplotlib>=3.8
+PyYAML>=6.0
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+super-image>=0.2          # EDSR super-resolution (optional stage)
+ultralytics>=8.3          # YOLOv8-OBB detection (optional stage)

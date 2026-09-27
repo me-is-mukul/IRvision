@@ -19,6 +19,19 @@ def to_display_rgb(rgb_chw: np.ndarray, gamma: float = 1.0) -> np.ndarray:
     return img ** (1.0 / gamma) if gamma != 1.0 else img
 
 
+def draw_detections(img_hwc: np.ndarray, detections: list[dict]) -> np.ndarray:
+    """Draw oriented boxes and labels (yellow) on an (H, W, 3) float image."""
+    canvas = (np.clip(img_hwc, 0, 1) * 255).astype(np.uint8).copy()
+    thickness = max(1, canvas.shape[0] // 400)
+    for d in detections:
+        pts = np.array(d["polygon"], np.int32).reshape(-1, 1, 2)
+        cv2.polylines(canvas, [pts], True, (255, 220, 0), thickness)
+        x, y = int(d["box"][0]), max(10, int(d["box"][1]) - 3)
+        cv2.putText(canvas, f"{d['class_name']} {d['confidence']:.2f}", (x, y), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.35 * thickness, (255, 220, 0), thickness)
+    return canvas.astype(np.float32) / 255.0
+
+
 def checkerboard(a: np.ndarray, b: np.ndarray, tile: int = 128) -> np.ndarray:
     """Interleave two (H, W, 3) images in a checkerboard — misalignment shows as broken edges."""
     h, w = a.shape[:2]

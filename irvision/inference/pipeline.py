@@ -194,7 +194,7 @@ class IRVisionPipeline:
         metrics: dict = {"input_shape": list(ir.shape), "output_shape": list(colorized.shape[1:]),
                          "valid_fraction": float(valid.mean()), "normalization": norm_stats}
         reference_semantic_map = reference_detections = None
-        ref = self._prepare_reference(reference_rgb, native.shape, warnings) if reference_rgb is not None else None
+        ref = self.prepare_reference(reference_rgb, native.shape, warnings) if reference_rgb is not None else None
         if ref is not None:
             mask = valid & np.all(np.isfinite(ref), axis=0)
             ref = np.nan_to_num(ref)
@@ -296,7 +296,7 @@ class IRVisionPipeline:
         return np.where(valid, ir, 0.0).astype(np.float32), valid
 
     @staticmethod
-    def _prepare_reference(reference_rgb, shape, warnings) -> np.ndarray | None:
+    def prepare_reference(reference_rgb, shape, warnings) -> np.ndarray | None:
         """Reference RGB as (3, H, W) float in [0, 1], or None (with a warning) if unusable."""
         ref = np.asarray(reference_rgb)
         if ref.ndim == 3 and ref.shape[-1] in (3, 4) and ref.shape[0] not in (3, 4):

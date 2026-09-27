@@ -9,8 +9,10 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.11-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![CUDA](https://img.shields.io/badge/CUDA-12.8-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-model%20server-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Tests](https://img.shields.io/badge/tests-81%20passing-brightgreen?logo=pytest&logoColor=white)](#-development)
+[![Tests](https://img.shields.io/badge/tests-88%20passing-brightgreen?logo=pytest&logoColor=white)](#-development)
 [![Data](https://img.shields.io/badge/data-Landsat%208%2F9-1f6feb)](https://www.usgs.gov/landsat-missions)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)](#-installation)
 
@@ -37,13 +39,14 @@ including a city it never saw during training.
 6. [Models and Training](#-models-and-training)
 7. [Evaluation and Results](#-evaluation-and-results)
 8. [Demo Guide](#-demo-guide)
-9. [Project Structure](#-project-structure)
-10. [Design Decisions](#-design-decisions)
-11. [Limitations](#-limitations)
-12. [Troubleshooting](#-troubleshooting)
-13. [Development](#-development)
-14. [Future Work](#-future-work)
-15. [Acknowledgements](#-acknowledgements)
+9. [Web App and Deployment](#-web-app-and-deployment)
+10. [Project Structure](#-project-structure)
+11. [Design Decisions](#-design-decisions)
+12. [Limitations](#-limitations)
+13. [Troubleshooting](#-troubleshooting)
+14. [Development](#-development)
+15. [Future Work](#-future-work)
+16. [Acknowledgements](#-acknowledgements)
 
 ---
 
@@ -105,7 +108,7 @@ python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
 pytest
 ```
 
-With a GPU, the first line must print `True`. All 81 tests should pass in about 20 seconds;
+With a GPU, the first line must print `True`. All 88 tests should pass in about 25 seconds;
 they use small synthetic data and need no network access.
 
 ### Step 5: Download data and build the models
@@ -131,6 +134,24 @@ python scripts/export_demo.py            # ready-to-upload demo images
 ---
 
 ## 🚀 Quick Start
+
+### Web app (recommended)
+
+```bash
+# terminal 1: model server
+.venv\Scripts\python.exe -m uvicorn irvision.api.server:app --port 8000
+
+# terminal 2: website
+cd web
+npm install
+echo NEXT_PUBLIC_API_URL=http://localhost:8000 > .env.local
+npm run dev
+```
+
+Open **http://localhost:3000**, scroll to **Try it**, choose a scene and press **Run pipeline**.
+Without the model server, the site runs in demo mode with pre-computed real results.
+
+### Streamlit dashboard (internal tool)
 
 Always start the dashboard with the project's own Python environment:
 
@@ -431,10 +452,86 @@ The perceptual loss gave no measurable improvement, so the simpler model remains
 | 2. Unseen city | 60 s | Select *hyderabad (held-out)*, crop 1024 over lakes and farmland, press **Process**. Walk through IR → enhanced → colorized → true colour and the metrics. |
 | 3. Semantic check | 45 s | Show the land-cover maps: water and vegetation are preserved. Upload `demo/hyderabad_city_*` to show that dense urban areas are not (7.4 % agreement). |
 | 4. Results | 30 s | Open **Model report**: best SSIM on every test set, and far higher land-cover agreement than the baselines. |
-| 5. Engineering | 25 s | One inference API behind the app, scripts and tests; graceful fallbacks; 81 automated tests. |
+| 5. Engineering | 25 s | One inference API behind the web app, scripts and tests; graceful fallbacks; 88 automated tests. |
 
 If anything fails during a demo, the app falls back to a simpler colorizer and shows a warning.
 Backup figures are in `outputs/results/`.
+
+---
+
+## 🌐 Web App and Deployment
+
+The public face of IRVision is a Next.js website (`web/`) with an animated walkthrough of the
+pipeline, an interactive playground and the evaluation results. It talks to a FastAPI model
+server (`irvision/api/server.py`), which wraps the same `process_image()` used everywhere else.
+
+```text
+Browser ──► Next.js website (Vercel) ──HTTPS──► FastAPI model server (Docker) ──► PyTorch models
+                   │
+                   └── demo mode: pre-computed real results in web/public/demo (no server needed)
+```
+
+| Mode | When | Features |
+|---|---|---|
+| **Demo** | `NEXT_PUBLIC_API_URL` not set, or server unreachable | All three example scenes with every stage option, real pre-computed results |
+| **Live** | `NEXT_PUBLIC_API_URL` set to a running model server | Real-time processing, uploads of your own thermal images |
+
+### Step 1: Deploy the website (Vercel)
+
+1. Push the repository to GitHub.
+2. In Vercel, **Add New → Project**, import the repository and set **Root Directory** to `web`.
+3. Optional: add the environment variable `NEXT_PUBLIC_API_URL` with your model server URL
+   (without a trailing slash). Leave it out for demo mode.
+4. Deploy. The site is fully static, so it builds in under a minute.
+
+### Step 2: Deploy the model server (optional, enables live mode)
+
+The model server is packaged as a Docker image (`Dockerfile`, CPU build, about 85 MB of model files).
+
+```bash
+docker build -t irvision-api .
+docker run -p 7860:7860 irvision-api        # check: http://localhost:7860/api/health
+```
+
+It runs on any container host. For **Hugging Face Spaces** (free CPU tier), the trained models
+are git-ignored in this repository, so assemble a ready-to-push Space folder first:
+
+```bash
+git clone https://huggingface.co/spaces/<your-user>/irvision-api deploy/hf-space
+python scripts/build_space.py            # copies code, config, demo images and models (86 MB)
+cd deploy/hf-space
+git lfs install
+git add . && git commit -m "Deploy IRVision model server" && git push
+```
+
+Render, Railway, Fly.io or Google Cloud Run can build the same `Dockerfile`. The server listens
+on the `PORT` variable (default 7860).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `IRVISION_ALLOWED_ORIGINS` | `*` | Comma-separated website origins allowed to call the API, e.g. `https://irvision.vercel.app` |
+| `IRVISION_MAX_SIDE` | `2048` | Largest accepted image side in pixels |
+| `IRVISION_MAX_UPLOAD_MB` | `25` | Largest accepted upload |
+
+### API endpoints
+
+| Method | Path | Returns |
+|---|---|---|
+| `GET` | `/api/health` | Server and model status |
+| `GET` | `/api/examples` | Built-in example scenes |
+| `POST` | `/api/process/example/{id}` | Full pipeline result for an example (`?super_resolution=true&detection=true`) |
+| `POST` | `/api/process` | Full pipeline result for an uploaded image (form fields `image`, optional `reference`) |
+| `GET` | `/api/report` | Test-set results |
+
+Interactive API documentation is available at `/docs` on the running server.
+
+### Refreshing the demo data
+
+After retraining or re-evaluating, regenerate the website's pre-computed results:
+
+```bash
+python scripts/export_web_demo.py
+```
 
 ---
 
@@ -449,12 +546,15 @@ irvision/                  Python package (installed with pip install -e .)
 ├── detection/             YOLOv8-OBB detector and matching metrics
 ├── evaluation/            PSNR, SSIM, timing, evaluation helpers
 ├── inference/             process_image() pipeline and file reading
+├── api/                   FastAPI model server and response builder
 └── utils/                 configuration, logging, tiling, figures
-app/streamlit_app.py       dashboard (user interface only)
+web/                       Next.js website (animated pipeline, playground, results)
+app/streamlit_app.py       Streamlit dashboard (internal tool)
 scripts/                   command-line entry points for every step
 config/config.yaml         all settings, with comments
-tests/                     81 automated tests (synthetic data)
+tests/                     88 automated tests (synthetic data)
 demo/                      ready-to-upload example images
+Dockerfile                 container image of the model server
 data/, outputs/            generated data, models and results (not version-controlled)
 ```
 
@@ -539,7 +639,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for data flow, interfaces and extensi
 pytest
 ```
 
-81 tests, about 20 seconds, no network or real data required. They cover data loading,
+88 tests, about 25 seconds, no network or real data required. They cover data loading,
 alignment, masking, normalization, enhancement, patching, all models and losses, the training
 loop, metrics, the inference pipeline and its fallbacks, super-resolution, detection, file
 reading and the dashboard.

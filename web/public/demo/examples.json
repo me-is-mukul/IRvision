@@ -1,0 +1,23 @@
+[
+ {
+  "id": "hyderabad_city",
+  "title": "City centre",
+  "description": "Dense urban area: the known weak spot",
+  "thumbnail": "/demo/hyderabad_city/thumb.webp",
+  "ir_thumbnail": "/demo/hyderabad_city/ir_thumb.webp"
+ },
+ {
+  "id": "hyderabad_farmland",
+  "title": "Farmland",
+  "description": "Irrigated fields around Hyderabad: 92 % cropland",
+  "thumbnail": "/demo/hyderabad_farmland/thumb.webp",
+  "ir_thumbnail": "/demo/hyderabad_farmland/ir_thumb.webp"
+ },
+ {
+  "id": "hyderabad_lakes",
+  "title": "Lakes",
+  "description": "Lakes and farmland: water is preserved best",
+  "thumbnail": "/demo/hyderabad_lakes/thumb.webp",
+  "ir_thumbnail": "/demo/hyderabad_lakes/ir_thumb.webp"
+ }
+]

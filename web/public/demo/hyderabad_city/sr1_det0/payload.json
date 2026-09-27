@@ -1,0 +1,141 @@
+{
+ "source": {
+  "kind": "example",
+  "id": "hyderabad_city",
+  "title": "City centre"
+ },
+ "shape": [
+  512,
+  512
+ ],
+ "output_shape": [
+  1024,
+  1024
+ ],
+ "scale": 2,
+ "colorizer": "unet",
+ "valid_fraction": 1.0,
+ "stages": [
+  {
+   "key": "validation",
+   "label": "Validation",
+   "description": "Single band, size limits, no-data mask",
+   "status": "done",
+   "ms": 2.5
+  },
+  {
+   "key": "normalization",
+   "label": "Normalization",
+   "description": "Robust 2\u201398 % percentile stretch",
+   "status": "done",
+   "ms": 6.6
+  },
+  {
+   "key": "enhancement",
+   "label": "Enhancement",
+   "description": "CLAHE local contrast (16-bit)",
+   "status": "done",
+   "ms": 25.1
+  },
+  {
+   "key": "super_resolution",
+   "label": "Super-resolution",
+   "description": "EDSR \u00d72 upscaling (optional)",
+   "status": "done",
+   "ms": 341.9
+  },
+  {
+   "key": "colorization",
+   "label": "Colorization",
+   "description": "U-Net: thermal \u2192 RGB",
+   "status": "done",
+   "ms": 253.6
+  },
+  {
+   "key": "segmentation",
+   "label": "Land-cover map",
+   "description": "DeepLabV3 on the colorized image",
+   "status": "done",
+   "ms": 39.9
+  },
+  {
+   "key": "detection",
+   "label": "Object detection",
+   "description": "YOLOv8-OBB, aerial classes (optional)",
+   "status": "off",
+   "ms": 0.0
+  },
+  {
+   "key": "metrics",
+   "label": "Quality metrics",
+   "description": "PSNR and SSIM vs. true colour",
+   "status": "done",
+   "ms": 241.5
+  },
+  {
+   "key": "semantic_validation",
+   "label": "Semantic check",
+   "description": "Land cover: colorized vs. true",
+   "status": "done",
+   "ms": 31.1
+  },
+  {
+   "key": "detection_validation",
+   "label": "Detection check",
+   "description": "Objects: colorized vs. true",
+   "status": "skipped",
+   "ms": 0.0
+  }
+ ],
+ "images": {
+  "input": "/demo/hyderabad_city/sr1_det0/input.webp",
+  "enhanced": "/demo/hyderabad_city/sr1_det0/enhanced.webp",
+  "colorized": "/demo/hyderabad_city/sr1_det0/colorized.webp",
+  "super_resolved": "/demo/hyderabad_city/sr1_det0/super_resolved.webp",
+  "reference": "/demo/hyderabad_city/sr1_det0/reference.webp",
+  "semantic": "/demo/hyderabad_city/sr1_det0/semantic.png",
+  "reference_semantic": "/demo/hyderabad_city/sr1_det0/reference_semantic.png"
+ },
+ "metrics": {
+  "total_ms": 942.2,
+  "psnr": 16.5,
+  "ssim": 0.3252,
+  "semantic": {
+   "agreement": 0.0553,
+   "miou": 0.054,
+   "mean_dice": 0.0946,
+   "iou": {
+    "tree cover": 0.1928,
+    "low vegetation / crops": 0.0109,
+    "built-up": 0.0,
+    "bare / sparse": 0.0244,
+    "water": 0.0421
+   }
+  }
+ },
+ "detections": null,
+ "reference_detections": null,
+ "legend": [
+  {
+   "name": "tree cover",
+   "color": "#006400"
+  },
+  {
+   "name": "low vegetation / crops",
+   "color": "#aad25a"
+  },
+  {
+   "name": "built-up",
+   "color": "#dc2828"
+  },
+  {
+   "name": "bare / sparse",
+   "color": "#c8aa78"
+  },
+  {
+   "name": "water",
+   "color": "#1e5adc"
+  }
+ ],
+ "warnings": []
+}

@@ -1,0 +1,122 @@
+{
+ "colorization": {
+  "patches": 355,
+  "rows": [
+   {
+    "method": "Average colour",
+    "all": [
+     19.55,
+     0.3873
+    ],
+    "holdout": [
+     19.04,
+     0.3489
+    ]
+   },
+   {
+    "method": "Lookup table",
+    "all": [
+     21.65,
+     0.4789
+    ],
+    "holdout": [
+     21.33,
+     0.4343
+    ]
+   },
+   {
+    "method": "IRVision U-Net",
+    "all": [
+     22.12,
+     0.5468
+    ],
+    "holdout": [
+     21.28,
+     0.495
+    ]
+   }
+  ],
+  "end_to_end": [
+   {
+    "scene_id": "LC09_L2SP_144048_20240302_02_T1",
+    "shape": [
+     2048,
+     2048
+    ],
+    "psnr": 20.98,
+    "ssim": 0.5098,
+    "time_ms": {
+     "validation": 28.5,
+     "normalization": 109.7,
+     "enhancement": 139.0,
+     "colorization": 1078.5,
+     "segmentation": 1016.6,
+     "metrics": 3929.6,
+     "semantic_validation": 1215.4,
+     "total": 7517.3
+    },
+    "warnings": []
+   }
+  ]
+ },
+ "semantic": {
+  "ceiling": 0.456,
+  "rows": [
+   {
+    "method": "IRVision U-Net",
+    "miou": 0.269,
+    "agreement": 0.428
+   },
+   {
+    "method": "Lookup table",
+    "miou": 0.034,
+    "agreement": 0.092
+   },
+   {
+    "method": "Average colour",
+    "miou": 0.058,
+    "agreement": 0.153
+   }
+  ],
+  "per_class": {
+   "tree cover": 0.2623,
+   "low vegetation / crops": 0.3444,
+   "built-up": 0.0007,
+   "bare / sparse": 0.003,
+   "water": 0.7353
+  }
+ },
+ "advanced": {
+  "super_resolution": [
+   {
+    "method": "U-Net",
+    "psnr": 22.12,
+    "ssim": 0.5468,
+    "semantic_miou": 0.2692,
+    "semantic_agreement": 0.4277,
+    "patches": 355
+   },
+   {
+    "method": "EDSR \u00d72 + U-Net",
+    "psnr": 19.792,
+    "ssim": 0.4987,
+    "semantic_miou": 0.1485,
+    "semantic_agreement": 0.3502,
+    "patches": 355
+   }
+  ],
+  "detection": {
+   "true_rgb": {
+    "harbor": 5,
+    "ship": 2,
+    "storage tank": 3,
+    "bridge": 2,
+    "plane": 2
+   },
+   "unet_rgb": {
+    "plane": 21
+   },
+   "matched": 0
+  }
+ }
+}

@@ -1,0 +1,292 @@
+{
+ "source": {
+  "kind": "example",
+  "id": "hyderabad_farmland",
+  "title": "Farmland"
+ },
+ "shape": [
+  512,
+  512
+ ],
+ "output_shape": [
+  1024,
+  1024
+ ],
+ "scale": 2,
+ "colorizer": "unet",
+ "valid_fraction": 1.0,
+ "stages": [
+  {
+   "key": "validation",
+   "label": "Validation",
+   "description": "Single band, size limits, no-data mask",
+   "status": "done",
+   "ms": 2.6
+  },
+  {
+   "key": "normalization",
+   "label": "Normalization",
+   "description": "Robust 2\u201398 % percentile stretch",
+   "status": "done",
+   "ms": 6.3
+  },
+  {
+   "key": "enhancement",
+   "label": "Enhancement",
+   "description": "CLAHE local contrast (16-bit)",
+   "status": "done",
+   "ms": 23.4
+  },
+  {
+   "key": "super_resolution",
+   "label": "Super-resolution",
+   "description": "EDSR \u00d72 upscaling (optional)",
+   "status": "done",
+   "ms": 323.3
+  },
+  {
+   "key": "colorization",
+   "label": "Colorization",
+   "description": "U-Net: thermal \u2192 RGB",
+   "status": "done",
+   "ms": 246.5
+  },
+  {
+   "key": "segmentation",
+   "label": "Land-cover map",
+   "description": "DeepLabV3 on the colorized image",
+   "status": "done",
+   "ms": 31.2
+  },
+  {
+   "key": "detection",
+   "label": "Object detection",
+   "description": "YOLOv8-OBB, aerial classes (optional)",
+   "status": "done",
+   "ms": 448.7
+  },
+  {
+   "key": "metrics",
+   "label": "Quality metrics",
+   "description": "PSNR and SSIM vs. true colour",
+   "status": "done",
+   "ms": 236.2
+  },
+  {
+   "key": "semantic_validation",
+   "label": "Semantic check",
+   "description": "Land cover: colorized vs. true",
+   "status": "done",
+   "ms": 34.6
+  },
+  {
+   "key": "detection_validation",
+   "label": "Detection check",
+   "description": "Objects: colorized vs. true",
+   "status": "done",
+   "ms": 654.0
+  }
+ ],
+ "images": {
+  "input": "/demo/hyderabad_farmland/sr1_det1/input.webp",
+  "enhanced": "/demo/hyderabad_farmland/sr1_det1/enhanced.webp",
+  "colorized": "/demo/hyderabad_farmland/sr1_det1/colorized.webp",
+  "super_resolved": "/demo/hyderabad_farmland/sr1_det1/super_resolved.webp",
+  "reference": "/demo/hyderabad_farmland/sr1_det1/reference.webp",
+  "semantic": "/demo/hyderabad_farmland/sr1_det1/semantic.png",
+  "reference_semantic": "/demo/hyderabad_farmland/sr1_det1/reference_semantic.png"
+ },
+ "metrics": {
+  "total_ms": 2006.9,
+  "psnr": 18.44,
+  "ssim": 0.489,
+  "semantic": {
+   "agreement": 0.3844,
+   "miou": 0.1287,
+   "mean_dice": 0.2104,
+   "iou": {
+    "tree cover": 0.2323,
+    "low vegetation / crops": 0.2605,
+    "built-up": 0.0,
+    "bare / sparse": 0.0,
+    "water": 0.1506
+   }
+  },
+  "detection": {
+   "tp": 0,
+   "fp": 0,
+   "fn": 5,
+   "n_pred": 0,
+   "n_ref": 5,
+   "precision": null,
+   "recall": 0.0,
+   "f1": 0.0
+  }
+ },
+ "detections": [],
+ "reference_detections": [
+  {
+   "class_name": "plane",
+   "confidence": 0.2708,
+   "box": [
+    254.5,
+    11.7,
+    286.5,
+    51.2
+   ],
+   "polygon": [
+    [
+     286.5,
+     49.900001525878906
+    ],
+    [
+     284.8999996185303,
+     11.699999809265137
+    ],
+    [
+     254.5,
+     13.0
+    ],
+    [
+     256.1000000014901,
+     51.20000076293945
+    ]
+   ]
+  },
+  {
+   "class_name": "plane",
+   "confidence": 0.269,
+   "box": [
+    248.9,
+    531.6,
+    276.4,
+    577.4
+   ],
+   "polygon": [
+    [
+     271.3999996185303,
+     577.4000015258789
+    ],
+    [
+     276.3999996185303,
+     534.2000007629395
+    ],
+    [
+     253.90000009536743,
+     531.6000003814697
+    ],
+    [
+     248.90000009536743,
+     574.7999992370605
+    ]
+   ]
+  },
+  {
+   "class_name": "plane",
+   "confidence": 0.4138,
+   "box": [
+    800.0,
+    723.7,
+    834.1,
+    759.7
+   ],
+   "polygon": [
+    [
+     831.2000007629395,
+     759.6999969482422
+    ],
+    [
+     834.0999984741211,
+     726.3999938964844
+    ],
+    [
+     803.0,
+     723.6999969482422
+    ],
+    [
+     800.0,
+     757.0
+    ]
+   ]
+  },
+  {
+   "class_name": "plane",
+   "confidence": 0.3208,
+   "box": [
+    652.1,
+    764.8,
+    699.0,
+    783.8
+   ],
+   "polygon": [
+    [
+     698.1000061035156,
+     783.8000001907349
+    ],
+    [
+     699.0,
+     767.3000000119209
+    ],
+    [
+     652.8999938964844,
+     764.7999999523163
+    ],
+    [
+     652.1000061035156,
+     781.3999996185303
+    ]
+   ]
+  },
+  {
+   "class_name": "plane",
+   "confidence": 0.2908,
+   "box": [
+    747.9,
+    825.2,
+    768.9,
+    874.2
+   ],
+   "polygon": [
+    [
+     768.8999938964844,
+     874.0999984741211
+    ],
+    [
+     768.6000061035156,
+     825.2000007629395
+    ],
+    [
+     747.8999938964844,
+     825.4000015258789
+    ],
+    [
+     748.1999969482422,
+     874.1999969482422
+    ]
+   ]
+  }
+ ],
+ "legend": [
+  {
+   "name": "tree cover",
+   "color": "#006400"
+  },
+  {
+   "name": "low vegetation / crops",
+   "color": "#aad25a"
+  },
+  {
+   "name": "built-up",
+   "color": "#dc2828"
+  },
+  {
+   "name": "bare / sparse",
+   "color": "#c8aa78"
+  },
+  {
+   "name": "water",
+   "color": "#1e5adc"
+  }
+ ],
+ "warnings": []
+}

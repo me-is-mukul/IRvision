@@ -1,0 +1,29 @@
+# Keep the image small: only code, config, demo images and the files the Dockerfile copies.
+.venv/
+venv/
+.git/
+data/
+web/
+media/
+notebooks/
+tests/
+app/
+scripts/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+*.egg-info/
+
+# outputs: exclude everything except what the server needs
+outputs/**
+!outputs/models/
+!outputs/models/unet_l1_ssim_9city/
+!outputs/models/unet_l1_ssim_9city/best.pt
+!outputs/models/segmenter/
+!outputs/models/segmenter/best.pt
+!outputs/models/baseline_lut.npy
+!outputs/models/baseline_mean_color.npy
+!outputs/results/
+!outputs/results/*.json
+!outputs/pretrained/
+!outputs/pretrained/yolov8n-obb.pt

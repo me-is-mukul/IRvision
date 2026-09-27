@@ -22,3 +22,6 @@ outputs/**/*
 .DS_Store
 Thumbs.db
 .ipynb_checkpoints/
+
+# assembled deployment folders (scripts/build_space.py)
+deploy/

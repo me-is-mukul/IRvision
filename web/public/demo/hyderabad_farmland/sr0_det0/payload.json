@@ -1,0 +1,140 @@
+{
+ "source": {
+  "kind": "example",
+  "id": "hyderabad_farmland",
+  "title": "Farmland"
+ },
+ "shape": [
+  512,
+  512
+ ],
+ "output_shape": [
+  512,
+  512
+ ],
+ "scale": 1,
+ "colorizer": "unet",
+ "valid_fraction": 1.0,
+ "stages": [
+  {
+   "key": "validation",
+   "label": "Validation",
+   "description": "Single band, size limits, no-data mask",
+   "status": "done",
+   "ms": 2.6
+  },
+  {
+   "key": "normalization",
+   "label": "Normalization",
+   "description": "Robust 2\u201398 % percentile stretch",
+   "status": "done",
+   "ms": 6.7
+  },
+  {
+   "key": "enhancement",
+   "label": "Enhancement",
+   "description": "CLAHE local contrast (16-bit)",
+   "status": "done",
+   "ms": 29.3
+  },
+  {
+   "key": "super_resolution",
+   "label": "Super-resolution",
+   "description": "EDSR \u00d72 upscaling (optional)",
+   "status": "off",
+   "ms": 0.0
+  },
+  {
+   "key": "colorization",
+   "label": "Colorization",
+   "description": "U-Net: thermal \u2192 RGB",
+   "status": "done",
+   "ms": 34.1
+  },
+  {
+   "key": "segmentation",
+   "label": "Land-cover map",
+   "description": "DeepLabV3 on the colorized image",
+   "status": "done",
+   "ms": 31.9
+  },
+  {
+   "key": "detection",
+   "label": "Object detection",
+   "description": "YOLOv8-OBB, aerial classes (optional)",
+   "status": "off",
+   "ms": 0.0
+  },
+  {
+   "key": "metrics",
+   "label": "Quality metrics",
+   "description": "PSNR and SSIM vs. true colour",
+   "status": "done",
+   "ms": 194.3
+  },
+  {
+   "key": "semantic_validation",
+   "label": "Semantic check",
+   "description": "Land cover: colorized vs. true",
+   "status": "done",
+   "ms": 36.7
+  },
+  {
+   "key": "detection_validation",
+   "label": "Detection check",
+   "description": "Objects: colorized vs. true",
+   "status": "skipped",
+   "ms": 0.0
+  }
+ ],
+ "images": {
+  "input": "/demo/hyderabad_farmland/sr0_det0/input.webp",
+  "enhanced": "/demo/hyderabad_farmland/sr0_det0/enhanced.webp",
+  "colorized": "/demo/hyderabad_farmland/sr0_det0/colorized.webp",
+  "reference": "/demo/hyderabad_farmland/sr0_det0/reference.webp",
+  "semantic": "/demo/hyderabad_farmland/sr0_det0/semantic.png",
+  "reference_semantic": "/demo/hyderabad_farmland/sr0_det0/reference_semantic.png"
+ },
+ "metrics": {
+  "total_ms": 335.6,
+  "psnr": 22.6,
+  "ssim": 0.5526,
+  "semantic": {
+   "agreement": 0.3324,
+   "miou": 0.1056,
+   "mean_dice": 0.1781,
+   "iou": {
+    "tree cover": 0.2181,
+    "low vegetation / crops": 0.1926,
+    "built-up": 0.0,
+    "bare / sparse": 0.0,
+    "water": 0.117
+   }
+  }
+ },
+ "detections": null,
+ "reference_detections": null,
+ "legend": [
+  {
+   "name": "tree cover",
+   "color": "#006400"
+  },
+  {
+   "name": "low vegetation / crops",
+   "color": "#aad25a"
+  },
+  {
+   "name": "built-up",
+   "color": "#dc2828"
+  },
+  {
+   "name": "bare / sparse",
+   "color": "#c8aa78"
+  },
+  {
+   "name": "water",
+   "color": "#1e5adc"
+  }
+ ],
+ "warnings": []
+}
