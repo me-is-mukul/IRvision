@@ -77,12 +77,35 @@ export interface Options {
   detection: boolean;
 }
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+const BUILD_API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+const STORAGE_KEY = "irvision_api";
+
+/**
+ * Model server URL, in order of priority:
+ *  1. `?api=https://...` in the page URL (remembered in this browser; `?api=off` forgets it)
+ *  2. a URL remembered from an earlier visit
+ *  3. NEXT_PUBLIC_API_URL at build time
+ * This lets the site use a server whose address changes (e.g. a Cloudflare quick tunnel)
+ * without redeploying.
+ */
+export function apiUrl(): string {
+  if (typeof window === "undefined") return BUILD_API_URL;
+  try {
+    const param = new URLSearchParams(window.location.search).get("api");
+    if (param !== null) {
+      if (param === "" || param === "off") window.localStorage.removeItem(STORAGE_KEY);
+      else window.localStorage.setItem(STORAGE_KEY, param.replace(/\/$/, ""));
+    }
+    return window.localStorage.getItem(STORAGE_KEY) ?? BUILD_API_URL;
+  } catch {
+    return BUILD_API_URL;
+  }
+}
 
 export type Mode = "live" | "demo";
 
 export function configuredMode(): Mode {
-  return API_URL ? "live" : "demo";
+  return apiUrl() ? "live" : "demo";
 }
 
 async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -101,11 +124,11 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export async function checkBackend(): Promise<boolean> {
-  if (!API_URL) return false;
+  if (!apiUrl()) return false;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(`${API_URL}/api/health`, { signal: controller.signal });
+    const res = await fetch(`${apiUrl()}/api/health`, { signal: controller.signal });
     clearTimeout(timer);
     return res.ok;
   } catch {
@@ -118,7 +141,7 @@ const variant = (o: Options) => `sr${o.superResolution ? 1 : 0}_det${o.detection
 export async function fetchExamples(mode: Mode): Promise<Example[]> {
   if (mode === "live") {
     try {
-      return await getJson<Example[]>(`${API_URL}/api/examples`);
+      return await getJson<Example[]>(`${apiUrl()}/api/examples`);
     } catch {
       /* fall back to demo data */
     }
@@ -129,25 +152,25 @@ export async function fetchExamples(mode: Mode): Promise<Example[]> {
 export async function runExample(mode: Mode, id: string, options: Options): Promise<Payload> {
   if (mode === "live") {
     const qs = `super_resolution=${options.superResolution}&detection=${options.detection}`;
-    return getJson<Payload>(`${API_URL}/api/process/example/${encodeURIComponent(id)}?${qs}`, { method: "POST" });
+    return getJson<Payload>(`${apiUrl()}/api/process/example/${encodeURIComponent(id)}?${qs}`, { method: "POST" });
   }
   return getJson<Payload>(`/demo/${id}/${variant(options)}/payload.json`);
 }
 
 export async function runUpload(image: File, reference: File | null, options: Options): Promise<Payload> {
-  if (!API_URL) throw new Error("Uploading your own image needs the live backend (set NEXT_PUBLIC_API_URL).");
+  if (!apiUrl()) throw new Error("Uploading your own image needs the live model server.");
   const form = new FormData();
   form.append("image", image);
   if (reference) form.append("reference", reference);
   form.append("super_resolution", String(options.superResolution));
   form.append("detection", String(options.detection));
-  return getJson<Payload>(`${API_URL}/api/process`, { method: "POST", body: form });
+  return getJson<Payload>(`${apiUrl()}/api/process`, { method: "POST", body: form });
 }
 
 export async function fetchReport(mode: Mode): Promise<Report> {
   if (mode === "live") {
     try {
-      return await getJson<Report>(`${API_URL}/api/report`);
+      return await getJson<Report>(`${apiUrl()}/api/report`);
     } catch {
       /* fall back to demo data */
     }

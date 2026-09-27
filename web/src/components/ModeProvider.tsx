@@ -13,17 +13,17 @@ interface ModeInfo {
 const ModeContext = createContext<ModeInfo>({ mode: "demo", checking: false, configured: "demo" });
 
 export function ModeProvider({ children }: { children: ReactNode }) {
-  const configured = configuredMode();
-  const [info, setInfo] = useState<ModeInfo>({ mode: "demo", checking: configured === "live", configured });
+  const [info, setInfo] = useState<ModeInfo>({ mode: "demo", checking: true, configured: "demo" });
 
+  // the server URL can come from the page URL or browser storage, so resolve it on the client
   useEffect(() => {
-    if (configured !== "live") return;
-    let cancelled = false;
+    const configured = configuredMode();
+    let cancelled = false;   // checkBackend() resolves to false at once when no server is configured
     checkBackend().then((ok) => !cancelled && setInfo({ mode: ok ? "live" : "demo", checking: false, configured }));
     return () => {
       cancelled = true;
     };
-  }, [configured]);
+  }, []);
 
   return <ModeContext.Provider value={info}>{children}</ModeContext.Provider>;
 }
