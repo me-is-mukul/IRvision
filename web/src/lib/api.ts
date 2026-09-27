@@ -88,18 +88,38 @@ const STORAGE_KEY = "irvision_api";
  * This lets the site use a server whose address changes (e.g. a Cloudflare quick tunnel)
  * without redeploying.
  */
-export function apiUrl(): string {
-  if (typeof window === "undefined") return BUILD_API_URL;
+let activeUrl: string | null = null;   // the server that answered the health check
+
+function storedUrl(): string | null {
   try {
     const param = new URLSearchParams(window.location.search).get("api");
     if (param !== null) {
       if (param === "" || param === "off") window.localStorage.removeItem(STORAGE_KEY);
       else window.localStorage.setItem(STORAGE_KEY, param.replace(/\/$/, ""));
     }
-    return window.localStorage.getItem(STORAGE_KEY) ?? BUILD_API_URL;
+    return window.localStorage.getItem(STORAGE_KEY);
   } catch {
-    return BUILD_API_URL;
+    return null;
   }
+}
+
+function forgetStoredUrl() {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Candidate servers in priority order: page/remembered URL first, then the build-time URL. */
+function candidateUrls(): string[] {
+  if (typeof window === "undefined") return BUILD_API_URL ? [BUILD_API_URL] : [];
+  return [...new Set([storedUrl(), BUILD_API_URL].filter((u): u is string => Boolean(u)))];
+}
+
+/** Server used for requests: the one that passed the health check, else the first candidate. */
+export function apiUrl(): string {
+  return activeUrl ?? candidateUrls()[0] ?? "";
 }
 
 export type Mode = "live" | "demo";
@@ -123,17 +143,34 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function checkBackend(): Promise<boolean> {
-  if (!apiUrl()) return false;
+async function isHealthy(url: string): Promise<boolean> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(`${apiUrl()}/api/health`, { signal: controller.signal });
+    const res = await fetch(`${url}/api/health`, { signal: controller.signal });
     clearTimeout(timer);
     return res.ok;
   } catch {
     return false;
   }
+}
+
+/**
+ * Try every candidate server and keep the first one that answers. A remembered URL that no
+ * longer answers (e.g. an old tunnel) is forgotten, so the build-time URL takes over.
+ */
+export async function checkBackend(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const stored = storedUrl();
+  for (const url of candidateUrls()) {
+    if (await isHealthy(url)) {
+      activeUrl = url;
+      return true;
+    }
+    if (url === stored && url !== BUILD_API_URL) forgetStoredUrl();
+  }
+  activeUrl = null;
+  return false;
 }
 
 const variant = (o: Options) => `sr${o.superResolution ? 1 : 0}_det${o.detection ? 1 : 0}`;
